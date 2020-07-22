@@ -5,9 +5,9 @@ client.on('message', message => {
   if (message.content.toLowerCase() === '!rb test') {
     message.channel.send('Schedule Started');
     
-    setInterval(function(){
-        message.channel.send('Test message');
-    }, 30000);
+    //setInterval(function(){
+      //  message.channel.send('Test message');
+   // }, 30000);
 
   }
 });
