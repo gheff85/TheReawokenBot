@@ -9,7 +9,7 @@ client.on('message', message => {
 
 client.on('message', message => {
   if (message.content.toLowerCase() === '!rb startSchedule') {
-    message.channel.send("Schedule Started");
+    message.channel.send('Schedule Started');
     
   }
 });
