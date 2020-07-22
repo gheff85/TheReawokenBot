@@ -3,7 +3,7 @@ const client = new Discord.Client();
 
 client.on('message', message => {
   if (message.content.toLowerCase() === '!rb test') {
-    message.channel.send('!register');
+    message.channel.send('Schedule Started');
   }
 });
 
