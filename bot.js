@@ -6,7 +6,7 @@ client.on('message', message => {
   if (message.content.toLowerCase() === '!rb test') {
     message.channel.send('Finding inactive members...');
     
-    var chat = message.guild.channels.get(process.env.UNREGMEMBERS):
+    var chat = message.guild.channels.get(process.env.UNREGMEMBERS);
     var messages = chat.fetch();
     var lastmess = messages.first();
     message.channel.send(lastmess.author);
