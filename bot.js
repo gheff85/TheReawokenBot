@@ -4,11 +4,13 @@ const client = new Discord.Client();
 
 client.on('message', message => {
   if (message.content.toLowerCase() === '!rb test') {
-    message.channel.send('Schedule Started');
+    message.channel.send('Finding inactive members...');
     
-    //setInterval(function(){
-      //  message.channel.send('Test message');
-   // }, 30000);
+    var chat = message.guild.channels.get(process.env.UNREGMEMBERS):
+    var messages = chat.fetch();
+    var lastmess = messages.first();
+    message.channel.send(lastmess.author);
+    
 
   }
 });
