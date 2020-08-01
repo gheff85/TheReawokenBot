@@ -13,12 +13,44 @@ client.on("message", async(msg) => {
   {
     return;
   }
+  
+  /////////////////////////////!rb incleanchannel/////////////////////////
+  if(msg.content.toLowerCase() === "!rb cleanchannel"){
+    const authorized = await isMemberAuthroized(msg.member).catch(e=>{
+      error = "isMemberAuth: " + e.message;
+    });
 
+    if(!error){
+      
+      const channelMessages = await getAllChannelMessages([msg.channel]).catch(e=>{
+        error = "getAllChannelMessages: " + e.message;
+      });
+
+      messageArray = await getMessageAndDateArray(channelMessages).catch(e=>{
+        error = "getMessageAndDateArray: " + e.message;
+      });
+
+      const oldMgs = await getMessagesBeforeDate(messageArray, 14).catch(e=>{
+        error = "getMessagesBeforeDate: " + e.message;
+      });
+
+      if (!error){
+        await deleteMessages(oldMgs.map(m=>m.Message)).catch(e=>{
+          error = "deleteMessages: " + e.message;
+        });
+      }
+    }
+  }
+  
+
+
+  /////////////////////////////!rb inactive/////////////////////////
   if (msg.content.toLowerCase() === "!rb inactive") {
-  const authorized = await isMemberAuthroized(msg.member)
-  .catch(e=>{
-    error = "isMemberAuth: " + e.message;
-  });
+  const authorized = await isMemberAuthroized(msg.member).catch(e=>{
+			 
+      error = "isMemberAuth: " + e.message;
+    });
+    
     if(!error){
       const inactiveRole = await getRole(msg.guild, "Inactive").catch(e=>{
         error = "getInactiveRole: " + e.message;
@@ -43,7 +75,7 @@ client.on("message", async(msg) => {
             });
 
             if(!error){
-              const channelMessages = await getAllChannelMessages(channelList, msg).catch(e=>{
+              const channelMessages = await getAllChannelMessages(channelList).catch(e=>{
                 error = "getAllChannelMessages: " + e.message;
               });
 
@@ -72,7 +104,7 @@ client.on("message", async(msg) => {
   }
   
   
-  
+   /////////////////////////////Reply to message with error/////////////////////////
   if(error)
   {
     await msg.reply(error).catch(e=>{
@@ -84,11 +116,25 @@ client.on("message", async(msg) => {
 
 client.login(process.env.BOT_TOKEN);
 
+async function getMessageAndDateArray(channelMessages){
+  let results = [];
+  for(var message of channelMessages){
+    results.push({Message:message, Date: new Date(message.createdTimestamp)});
+  }
+
+  return results;
+}
+
+async function deleteMessages(messageList){
+  for(var message of messageList)
+  {
+    await message.delete().catch((e) => Promise.reject({message: e.message}));
+
+  }
+}
+
 async function isMemberAuthroized(member)
 {
-  console.log("Member " + typeof(member));
-  console.log("roles " + typeof(member.roles));
-  console.log("roles cache" + typeof(member.roles.cache));
   if(await member.roles.cache.find(r => r.name === "Admin") || await member.roles.cache.find(r => r.name === "Admin-Top-Tier")){
     return true;
   }
@@ -97,12 +143,23 @@ async function isMemberAuthroized(member)
   }
 }
 
-async function getInactiveIDsAndSendInactiveUsersReply(msg, userRecentMsgs){
+async function getMessagesBeforeDate(messagesList, numberOfDays){
+  let filteredMgs = [];
   var cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - numberOfDays);
+  filteredMgs = messagesList.filter(m => m.Date < cutoffDate );
+
+  return filteredMgs;
+}
+
+async function getInactiveIDsAndSendInactiveUsersReply(msg, userRecentMsgs){
+  
   let inactiveUsersMsg = [];
   let filteredUsers = [];
-  cutoffDate.setDate(cutoffDate.getDate() - 14);
-  filteredUsers = userRecentMsgs.filter(m => m.Date < cutoffDate );
+
+  filteredUsers = await getMessagesBeforeDate(userRecentMsgs, 14)
+  .catch((e) => Promise.reject({message: e.message}));
+
   inactiveUsersMsg = filteredUsers.map(elm => 
  `${elm.DisplayName}  lastActive: ${elm.Date.toLocaleString()}`);
  if(filteredUsers.length > 0)
@@ -182,7 +239,7 @@ async function getLastUserMessage(guildMembers, channelMessages, userID)
     return result;
 }
 
-async function getAllChannelMessages(channelList, initalMsg){
+async function getAllChannelMessages(channelList){
   const messageList = [];
   let last_id;
 
