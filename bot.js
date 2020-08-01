@@ -128,7 +128,7 @@ async function getMessageAndDateArray(channelMessages){
 async function deleteMessages(messageList){
   for(var message of messageList)
   {
-    await message.delete().catch((e) => Promise.reject({message: e.message}));
+    await message.delete(1500).catch((e) => Promise.reject({message: e.message}));
 
   }
 }
