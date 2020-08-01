@@ -14,10 +14,11 @@ client.on("message", async(msg) => {
     return;
   }
 
-  const authorized = await isMemberAuthroized(msg.member).catch(e=>{
-    error = "isMemberAuth: " + e.message;
-    console.log(e);
-  });
+  const authorized = await isMemberAuthroized(msg.member)
+  //.catch(e=>{
+  //  error = "isMemberAuth: " + e.message;
+  //  console.log(e);
+  //});
   
 
   if (msg.content.toLowerCase() === "!rb inactive" && authorized) {
