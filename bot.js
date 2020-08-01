@@ -35,9 +35,15 @@ client.on("message", async(msg) => {
       });
 
       if (!error){
-        await deleteMessages(oldMgs.map(m=>m.Message)).catch(e=>{
+        let count = await deleteMessages(oldMgs.map(m=>m.Message)).catch(e=>{
           error = "deleteMessages: " + e.message;
         });
+        
+        if(!error){
+           msg.reply("Deleted " + count + " Messages").catch(e=>{
+            console.log(e.message);
+           });
+        }
       }
     }
   }
@@ -126,11 +132,14 @@ async function getMessageAndDateArray(channelMessages){
 }
 
 async function deleteMessages(messageList){
+ let count;
   for(var message of messageList)
   {
-    await message.delete(1500).catch((e) => Promise.reject({message: e.message}));
+    await message.delete(1500).then(count = count + 1).catch((e) => Promise.reject({message: e.message}));
 
   }
+
+return count;
 }
 
 async function isMemberAuthroized(member)
