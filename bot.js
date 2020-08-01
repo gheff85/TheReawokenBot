@@ -16,6 +16,7 @@ client.on("message", async(msg) => {
 
   const authorized = await isMemberAuthroized(msg.member).catch(e=>{
     error = "isMemberAuth: " + e.message;
+    console.log(e);
   });
   
 
