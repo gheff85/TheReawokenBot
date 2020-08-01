@@ -101,7 +101,7 @@ async function getInactiveIDsAndSendInactiveUsersReply(msg, userRecentMsgs){
   var cutoffDate = new Date();
   let inactiveUsersMsg = [];
   let filteredUsers = [];
-  cutoffDate.setDate(cutoffDate.getDate() - 21);
+  cutoffDate.setDate(cutoffDate.getDate() - 14);
   filteredUsers = userRecentMsgs.filter(m => m.Date < cutoffDate );
   inactiveUsersMsg = filteredUsers.map(elm => 
  `${elm.DisplayName}  lastActive: ${elm.Date.toLocaleString()}`);
