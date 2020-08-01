@@ -14,11 +14,12 @@ client.on("message", async(msg) => {
     return;
   }
 
+  console.log(msg);
+  console.log(msg.member);
   const authorized = await isMemberAuthroized(msg.member)
-  //.catch(e=>{
-  //  error = "isMemberAuth: " + e.message;
-  //  console.log(e);
-  //});
+  .catch(e=>{
+    error = "isMemberAuth: " + e.message;
+  });
   
 
   if (msg.content.toLowerCase() === "!rb inactive" && authorized) {
@@ -88,6 +89,9 @@ client.login(process.env.BOT_TOKEN);
 
 async function isMemberAuthroized(member)
 {
+  console.log(member);
+  console.log(member.roles);
+  console.log(member.role.cache);
   if(await member.roles.cache.find(r => r.name === "Admin") || await member.roles.cache.find(r => r.name === "Admin-Top-Tier")){
     return true;
   }
