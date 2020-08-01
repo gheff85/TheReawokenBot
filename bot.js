@@ -14,8 +14,6 @@ client.on("message", async(msg) => {
     return;
   }
 
-  console.log(msg);
-  console.log(msg.member);
   const authorized = await isMemberAuthroized(msg.member)
   .catch(e=>{
     error = "isMemberAuth: " + e.message;
@@ -89,9 +87,9 @@ client.login(process.env.BOT_TOKEN);
 
 async function isMemberAuthroized(member)
 {
-  console.log(member);
-  console.log(member.roles);
-  console.log(member.role.cache);
+  console.log("Member " + typeof(member));
+  console.log("roles " + typeof(member.roles));
+  console.log("roles cache" + typeof(member.roles.cache));
   if(await member.roles.cache.find(r => r.name === "Admin") || await member.roles.cache.find(r => r.name === "Admin-Top-Tier")){
     return true;
   }
