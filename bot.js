@@ -15,19 +15,19 @@ client.on("message", async(msg) => {
   }
 
   const authorized = await isMemberAuthroized(msg.member).catch(e=>{
-    error = e.message;
+    error = "isMemberAuth: " + e.message;
   });
   
 
   if (msg.content.toLowerCase() === "!rb inactive" && authorized) {
 
     const inactiveRole = await getRole(msg.guild, "Inactive").catch(e=>{
-      error = e.message;
+      error = "getInactiveRole: " + e.message;
     });
 
     if(!error){
       const Role = await getRole(msg.guild, "Registered").catch(e=>{
-        error = e.message;
+        error = "getRegisteredRole: " + e.message;
       });
 
       if(!error){
@@ -36,31 +36,31 @@ client.on("message", async(msg) => {
                                                        process.env.PVE_CHANNEL,
                                                        process.env.PVP_CHANNEL,
                                                        process.env.RAIDS_CHANNEL]).catch(e=>{
-                                                        error = e.message;
+                                                        error = "addChannelToArray: " + e.message;
                                                       });
         if(!error){
           const MemberIDs = await getAllMembersFromRole(msg.guild.members, Role).catch(e=>{
-            error = e.message;
+            error = "getAllMemebrsFromRole: " + e.message;
           });
 
           if(!error){
             const channelMessages = await getAllChannelMessages(channelList, msg).catch(e=>{
-              error = e.message;
+              error = "getAllChannelMessages: " + e.message;
             });
 
             if(!error){
               const userRecentMsgs = await getLastMessageFromEveryMember(msg.guild.members, MemberIDs, channelMessages).catch(e => {
-                error = e.message;
+                error = "getLastMessageFromEveryMember: " + e.message;
               });
 
               if(!error){
                 const inactiveUsers = await getInactiveIDsAndSendInactiveUsersReply(msg, userRecentMsgs).catch(e=>{
-                  error = e.message;
+                  error = "getInactiveIDsAndSend: " + e.message;
                 });  
 
                 if(!error){
                   await addInactiveStatus(msg, inactiveUsers, inactiveRole).catch(e =>{
-                    error = e.message;
+                    error = "addInactiveStatus: " + e.message;
                   });
                 }
               }
