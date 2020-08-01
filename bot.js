@@ -14,55 +14,54 @@ client.on("message", async(msg) => {
     return;
   }
 
+  if (msg.content.toLowerCase() === "!rb inactive") {
   const authorized = await isMemberAuthroized(msg.member)
   .catch(e=>{
     error = "isMemberAuth: " + e.message;
   });
-  
-
-  if (msg.content.toLowerCase() === "!rb inactive" && authorized) {
-
-    const inactiveRole = await getRole(msg.guild, "Inactive").catch(e=>{
-      error = "getInactiveRole: " + e.message;
-    });
-
     if(!error){
-      const Role = await getRole(msg.guild, "Registered").catch(e=>{
-        error = "getRegisteredRole: " + e.message;
+      const inactiveRole = await getRole(msg.guild, "Inactive").catch(e=>{
+        error = "getInactiveRole: " + e.message;
       });
-
+    
       if(!error){
-        const channelList = await addChannelToArray(msg.client.channels,
-                                                      [process.env.CHAT_CHANNEL, 
-                                                       process.env.PVE_CHANNEL,
-                                                       process.env.PVP_CHANNEL,
-                                                       process.env.RAIDS_CHANNEL]).catch(e=>{
-                                                        error = "addChannelToArray: " + e.message;
-                                                      });
-        if(!error){
-          const MemberIDs = await getAllMembersFromRole(msg.guild.members, Role).catch(e=>{
-            error = "getAllMemebrsFromRole: " + e.message;
-          });
+        const Role = await getRole(msg.guild, "Registered").catch(e=>{
+          error = "getRegisteredRole: " + e.message;
+        });
 
+        if(!error){
+          const channelList = await addChannelToArray(msg.client.channels,
+                                                        [process.env.CHAT_CHANNEL, 
+                                                         process.env.PVE_CHANNEL,
+                                                         process.env.PVP_CHANNEL,
+                                                         process.env.RAIDS_CHANNEL]).catch(e=>{
+                                                          error = "addChannelToArray: " + e.message;
+                                                        });
           if(!error){
-            const channelMessages = await getAllChannelMessages(channelList, msg).catch(e=>{
-              error = "getAllChannelMessages: " + e.message;
+            const MemberIDs = await getAllMembersFromRole(msg.guild.members, Role).catch(e=>{
+              error = "getAllMemebrsFromRole: " + e.message;
             });
 
             if(!error){
-              const userRecentMsgs = await getLastMessageFromEveryMember(msg.guild.members, MemberIDs, channelMessages).catch(e => {
-                error = "getLastMessageFromEveryMember: " + e.message;
+              const channelMessages = await getAllChannelMessages(channelList, msg).catch(e=>{
+                error = "getAllChannelMessages: " + e.message;
               });
 
               if(!error){
-                const inactiveUsers = await getInactiveIDsAndSendInactiveUsersReply(msg, userRecentMsgs).catch(e=>{
-                  error = "getInactiveIDsAndSend: " + e.message;
-                });  
+                const userRecentMsgs = await getLastMessageFromEveryMember(msg.guild.members, MemberIDs, channelMessages).catch(e => {
+                  error = "getLastMessageFromEveryMember: " + e.message;
+                });
 
                 if(!error){
-                  await addInactiveStatus(msg, inactiveUsers, inactiveRole).catch(e =>{
-                    error = "addInactiveStatus: " + e.message;
-                  });
+                  const inactiveUsers = await getInactiveIDsAndSendInactiveUsersReply(msg, userRecentMsgs).catch(e=>{
+                    error = "getInactiveIDsAndSend: " + e.message;
+                  });  
+
+                  if(!error){
+                    await addInactiveStatus(msg, inactiveUsers, inactiveRole).catch(e =>{
+                      error = "addInactiveStatus: " + e.message;
+                    });
+                  }
                 }
               }
             }
