@@ -101,7 +101,7 @@ async function getInactiveIDsAndSendInactiveUsersReply(msg, userRecentMsgs){
   cutoffDate.setDate(cutoffDate.getDate() - 21);
   filteredUsers = userRecentMsgs.filter(m => m.Date < cutoffDate );
   inactiveUsersMsg = filteredUsers.map(elm => 
- `${elm.Username}  lastActive: ${elm.Date.toLocaleString()}`);
+ `${elm.DisplayName}  lastActive: ${elm.Date.toLocaleString()}`);
  if(filteredUsers.length > 0)
  {
     await msg.reply("The following members have been marked as inactive:\n`"+ inactiveUsersMsg.join('\n') +"`")
@@ -129,7 +129,7 @@ async function getLastMessageFromEveryMember(guildMembers, MemberIDs, channelMes
 
 async function getAllMembersFromRole(members, role){
 
-  return await members.cache.filter(m => m.roles.cache.find(r => r == role))
+  return await members.cache.filter(m => m.roles.cache.find(r => r == role)).filter(u => u.user.bot === false)
                                                       .map(m => m.user.id);
 }
 
@@ -159,6 +159,10 @@ async function addInactiveStatus(initalMessage, inactiveMembers, inactiveRole)
 async function getLastUserMessage(guildMembers, channelMessages, userID)
 {
   let result;
+  const member = await guildMembers.cache.get(userID);
+  const nickname = member.nickname;
+  const userName = member.user.username;
+  const displayName = member.displayName;
     const msgs = await channelMessages.filter(m => m.author.id === userID);
     if(msgs.length > 0){
 
@@ -166,10 +170,10 @@ async function getLastUserMessage(guildMembers, channelMessages, userID)
       return new Date(b.createdTimestamp) - new Date(a.createdTimestamp);
     })[0];
 
-      result = {Username: first.author.tag, UserID: userID, Date:new Date(first.createdTimestamp) };
+      result = {Username: first.author.tag, DisplayName: displayName, UserID: userID, Date:new Date(first.createdTimestamp) };
     }
     else{
-      result = {Username: await guildMembers.cache.get(userID).user.username, UserID: userID, Date: new Date()};
+      result = {Username: userName, DisplayName: displayName,  UserID: userID, Date: new Date()};
     }
 
     return result;
@@ -189,11 +193,14 @@ async function getAllChannelMessages(channelList, initalMsg){
       }
 
       const messages = await channel.messages.fetch(options)
-      .catch((e) => Promise.reject({message: e.message}));
+      .catch((e) =>
+       Promise.reject({message: e.message}));
 
-      messageList.push(...messages.array());
-      last_id = messages.last().id;
-
+      if(messages.size > 0)
+      {
+        messageList.push(...messages.array());
+        last_id = messages.last().id;
+      }
       if(messages.size != 100){
         break;
       }
