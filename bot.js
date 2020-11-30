@@ -166,7 +166,7 @@ async function getInactiveIDsAndSendInactiveUsersReply(msg, userRecentMsgs){
   let inactiveUsersMsg = [];
   let filteredUsers = [];
 
-  filteredUsers = await getMessagesBeforeDate(userRecentMsgs, 14)
+  filteredUsers = await getMessagesBeforeDate(userRecentMsgs, 7)
   .catch((e) => Promise.reject({message: e.message}));
 
   inactiveUsersMsg = filteredUsers.map(elm => 
