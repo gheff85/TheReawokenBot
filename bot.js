@@ -14,26 +14,26 @@ client.on("message", async(msg) => {
     return;
   }
   
-  /////////////////////////////!rb incleanchannel/////////////////////////
-  if(msg.content.toLowerCase() === "!rb cleanchannel"){
+  /////////////////////////////!rb cc/////////////////////////
+  if(msg.content.toLowerCase() === "!rb cc"){
     const authorized = await isMemberAuthroized(msg.member).catch(e=>{
       error = "isMemberAuth: " + e.message;
     });
 
     if(!error){
-      
+      console.log("Member Authorised");
       const channelMessages = await getAllChannelMessages([msg.channel]).catch(e=>{
         error = "getAllChannelMessages: " + e.message;
       });
-
+      
       messageArray = await getMessageAndDateArray(channelMessages).catch(e=>{
         error = "getMessageAndDateArray: " + e.message;
       });
-
+      console.log("Retrieved All Messages");
       const oldMgs = await getMessagesBeforeDate(messageArray, 14).catch(e=>{
         error = "getMessagesBeforeDate: " + e.message;
       });
-
+      console.log("Filtered Messages younger than 13 days");
       if (!error){
         let count = await deleteMessages(oldMgs.map(m=>m.Message)).catch(e=>{
           error = "deleteMessages: " + e.message;
