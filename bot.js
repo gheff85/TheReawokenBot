@@ -135,7 +135,7 @@ async function deleteMessages(messageList){
  let count =0;
   for(var message of messageList)
   {
-    await message.delete({timeout: 1500}).then(count = count + 1).catch((e) => Promise.reject({message: e.message}));
+    await message.delete({timeout: 1500}).then(count = count + 1; console.log("Message Deleted");).catch((e) => Promise.reject({message: e.message}));
 
   }
 
