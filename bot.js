@@ -18,15 +18,22 @@ client.on("message", async(msg) => {
     return;
   }
   
+
+const authorized = await isMemberAuthroized(msg.member).catch(e=>{
+      error = "isMemberAuth: " + e.message;
+    });
+
+if(msg.content.toLowerCase() === "!test){
  const result = await executeUpsert(msg).catch(e=>{
     error = "executeUpsert: " + e.message;
   });
-	
+}
+
   /////////////////////////////!rb cc/////////////////////////
   if(msg.content.toLowerCase() === "!rb cc"){
-    const authorized = await isMemberAuthroized(msg.member).catch(e=>{
-      error = "isMemberAuth: " + e.message;
-    });
+  //  const authorized = await isMemberAuthroized(msg.member).catch(e=>{
+   //   error = "isMemberAuth: " + e.message;
+   // });
 
     if(!error){
       console.log("Member Authorised");
