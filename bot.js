@@ -2,7 +2,7 @@ const Discord = require("discord.js");
 const client = new Discord.Client();
 
 var pg = require('pg');
-var conString = process.env.DATABASE_URL+"?ssl=true";
+var conString = process.env.DATABASE_URL;
 
 
 
