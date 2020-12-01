@@ -151,14 +151,14 @@ async function executeUpsert(msg){
   var user_displayname = msg.guild.member(msg.author).nickname;
   var channel_id = msg.channel.id;
   var channel_name = msg.channel.name;
-  var currentTime = Date.now();
+  var currentTime = Date.now()::tstamp;
 
   var query = "INSERT INTO lastMessageSent(user_id, user_tag, user_displayname, channel_id, channel_name, last_message_dt) " +
   "VALUES('" + user_id +"','" + user_tag +"', '" + user_displayname + "', '" + channel_id + "', '" + channel_name +
-  "', 'to_timestamp(" + currentTime + "/1000.0)') " +
+  "', '" + currentTime + "') " +
   "ON CONFLICT (user_id) " +
   "DO UPDATE SET user_displayname='" + user_displayname + "', " +
-  "channel_id='" + channel_id + "', channel_name='" + channel_name + "', last_message_dt='to_timestamp(" + currentTime + "/1000.0)';";
+  "channel_id='" + channel_id + "', channel_name='" + channel_name + "', last_message_dt='" + currentTime + "';";
   
 	
   console.log(pgClient);
