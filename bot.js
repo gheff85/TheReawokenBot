@@ -161,7 +161,10 @@ async function executeUpsert(msg){
   console.log(pgClient);
   console.log(query);
   const result = await pgClient.query(query).catch((e) => Promise.reject(
-    {message: e.message})).finally(pgClient.end);
+    {message: e.message}));
+
+pgClient.end
+
 }
 
 async function deleteMessages(messageList){
