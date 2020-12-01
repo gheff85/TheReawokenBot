@@ -157,6 +157,9 @@ async function executeUpsert(msg){
   "UPDATE SET user_displayname='" + user_displayname + "', " +
   "channel_id='" + channel_id + "', channel_name='" + channel_name + "', last_message_dt = '" + currentTime + "'";
   
+	
+  console.log(pgClient);
+  console.log(query);
   const result = await pgClient.query(query).catch((e) => Promise.reject(
     {message: e.message})).finally(pgClient.end);
 }
