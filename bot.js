@@ -18,7 +18,7 @@ client.on("message", async(msg) => {
     return;
   }
   
-  const result = await executeUpsert(msg).catch(e=>{
+ const result = await executeUpsert(msg).catch(e=>{
     error = "executeUpsert: " + e.message;
   });
 	
