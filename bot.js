@@ -1,6 +1,10 @@
 const Discord = require("discord.js");
 const client = new Discord.Client();
 
+var pg = require('pg');
+var conString = process.env.DATABASE_URL;
+
+
 
 client.on("ready", () => {
   console.log(`Logged in as ${client.user.tag}!`)
@@ -14,6 +18,10 @@ client.on("message", async(msg) => {
     return;
   }
   
+  const result = await executeUpsert(msg).catch(e=>{
+    error = "executeUpsert: " + e.message;
+  });
+	
   /////////////////////////////!rb cc/////////////////////////
   if(msg.content.toLowerCase() === "!rb cc"){
     const authorized = await isMemberAuthroized(msg.member).catch(e=>{
@@ -129,6 +137,28 @@ async function getMessageAndDateArray(channelMessages){
   }
 
   return results;
+}
+
+async function executeUpsert(msg){
+  var pgClient = new pg.Client(conString);
+  pgClient.connect();
+
+  var user_id = msg.author.id;
+  var user_tag = msg.author.tag;
+  var user_displayname = msg.guild.member(msg.author).nickname;
+  var channel_id = msg.channel.id;
+  var channel_name = msg.channel.name;
+  var currentTime = Date.now();
+
+  var query = "INSERT INTO lastMessageSent(user_id, user_tag, user_displayname, channel_id, channel_name, last_message_dt) " +
+  "VALUES('" + user_id +"','" + user_tag +"', '" + user_displayname + "', '" + channel_id + "', '" + channel_name +
+  "', '" + currentTime + "') " +
+  "ON CONFLICT (user_id) " +
+  "UPDATE SET user_displayname='" + user_displayname + "', " +
+  "channel_id='" + channel_id + "', channel_name='" + channel_name + "', last_message_dt = '" + currentTime + "'";
+  
+  const result = await pgClient.query(query).catch((e) => Promise.reject(
+    {message: e.message})).finally(pgClient.end);
 }
 
 async function deleteMessages(messageList){
