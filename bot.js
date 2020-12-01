@@ -19,11 +19,10 @@ client.on("message", async(msg) => {
   }
   
 
-if(msg.content.toLowerCase() === "!test"){
  const result = await executeUpsert(msg).catch(e=>{
     error = "executeUpsert: " + e.message;
   });
-}
+
 
   /////////////////////////////!rb cc/////////////////////////
   if(msg.content.toLowerCase() === "!rb cc"){
