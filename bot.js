@@ -140,7 +140,7 @@ async function getMessageAndDateArray(channelMessages){
 }
 
 async function executeUpsert(msg){
-  var pgClient = new pg.Client(conString);
+  var pgClient = new pg.Client({connectionString: conString, ssl: { rejectUnauthorized: false });
   pgClient.connect();
 
   var user_id = msg.author.id;
