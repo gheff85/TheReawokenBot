@@ -168,6 +168,8 @@ async function executeUpsert(msg){
 
 pgClient.end
 
+console.log("Message details logged");
+
 }
 
 async function deleteMessages(messageList){
