@@ -155,7 +155,7 @@ async function executeUpsert(msg){
   "', '" + currentTime + "') " +
   "ON CONFLICT (user_id) " +
   "UPDATE SET user_displayname='" + user_displayname + "', " +
-  "channel_id='" + channel_id + "', channel_name='" + channel_name + "', last_message_dt = '" + currentTime + "'";
+  "channel_id='" + channel_id + "', channel_name='" + channel_name + "', last_message_dt = '" + currentTime + "';";
   
 	
   console.log(pgClient);
