@@ -151,7 +151,7 @@ async function executeUpsert(msg){
   var user_displayname = msg.guild.member(msg.author).nickname;
   var channel_id = msg.channel.id;
   var channel_name = msg.channel.name;
-  var currentTime = Date.now()::tstamp;
+  var currentTime = Date.now();
 
   var query = "INSERT INTO lastMessageSent(user_id, user_tag, user_displayname, channel_id, channel_name, last_message_dt) " +
   "VALUES('" + user_id +"','" + user_tag +"', '" + user_displayname + "', '" + channel_id + "', '" + channel_name +
