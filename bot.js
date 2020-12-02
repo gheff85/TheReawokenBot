@@ -4,7 +4,7 @@ const client = new Discord.Client();
 //var pg = require('pg');
 var conString = process.env.DATABASE_URL;
 const pgp = require('pg-promise')();
-pgp.pg.defaults.ssl = true;
+
 
 
 client.on("ready", () => {
@@ -146,7 +146,7 @@ async function executeUpsert(msg){
   //var pgPool = new pg.Pool({connectionString: conString, ssl: { rejectUnauthorized: false }});
   //gClient.connect();
 
-  const db = pgp(conString);
+  const db = pgp({connectionString: conString, ssl:{rejectUnauthorized: false}});
   var user_id = msg.author.id;
   var user_tag = msg.author.tag;
   var user_displayname = msg.guild.member(msg.author).nickname;
