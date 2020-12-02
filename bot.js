@@ -3,7 +3,8 @@ const client = new Discord.Client();
 
 var pg = require('pg');
 var conString = process.env.DATABASE_URL;
-
+const pgp = require('pg-promise');
+pgp.pg.defaults.ssl = true;
 
 
 client.on("ready", () => {
@@ -142,9 +143,10 @@ async function getMessageAndDateArray(channelMessages){
 }
 
 async function executeUpsert(msg){
-  var pgClient = new pg.Client({connectionString: conString, ssl: { rejectUnauthorized: false }});
-  pgClient.connect();
+  //var pgPool = new pg.Pool({connectionString: conString, ssl: { rejectUnauthorized: false }});
+  //gClient.connect();
 
+  const db = pgp(conString);
   var user_id = msg.author.id;
   var user_tag = msg.author.tag;
   var user_displayname = msg.guild.member(msg.author).nickname;
@@ -152,20 +154,24 @@ async function executeUpsert(msg){
   var channel_name = msg.channel.name;
   var currentTime = Date.now();
 
+
   var query = "INSERT INTO lastMessageSent(user_id, user_tag, user_displayname, channel_id, channel_name, last_message_dt) " +
   "VALUES('" + user_id +"','" + user_tag +"', '" + user_displayname + "', '" + channel_id + "', '" + channel_name +
   "', to_timestamp(" + currentTime /1000.0+ ")) " +
   "ON CONFLICT (user_id) " +
   "DO UPDATE SET user_displayname='" + user_displayname + "', " +
   "channel_id='" + channel_id + "', channel_name='" + channel_name + "', last_message_dt=to_timestamp(" + currentTime /1000.0+ ");";
-  
+ 
 	
-  console.log(pgClient);
+	
+  console.log(db);
   console.log(query);
-  const result = await pgClient.query(query).catch((e) => Promise.reject(
-    {message: e.message}));
+  const result = await db.one(query).catch((e) => Promise.reject(
+	  {message: e.message}));
+  //const result = await pgClient.query(query).catch((e) => Promise.reject(
+  //  {message: e.message}));
 
-pgClient.end
+//pgClient.end
 
 console.log("Message details logged");
 
