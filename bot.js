@@ -166,7 +166,7 @@ async function executeUpsert(msg){
 	
   console.log(db);
   console.log(query);
-  db.one(query).then(data => { 
+  db.none(query).then(data => { 
 	console.log("Message details logged");
     })
     .catch(error => {
