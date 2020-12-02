@@ -4,7 +4,7 @@ const client = new Discord.Client();
 var pg = require('pg');
 var conString = process.env.DATABASE_URL;
 const pgp = require('pg-promise');
-pgp.pg.defaults.ssl = true;
+//pgp.pg.defaults.ssl = true;
 
 
 client.on("ready", () => {
