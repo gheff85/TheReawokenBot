@@ -1,7 +1,7 @@
 const Discord = require("discord.js");
 const client = new Discord.Client();
 
-var pg = require('pg');
+//var pg = require('pg');
 var conString = process.env.DATABASE_URL;
 const pgp = require('pg-promise')();
 //pgp.pg.defaults.ssl = true;
@@ -166,14 +166,17 @@ async function executeUpsert(msg){
 	
   console.log(db);
   console.log(query);
-  const result = await db.one(query).catch((e) => Promise.reject(
-	  {message: e.message}));
+  db.one(query).then(data => { 
+	console.log("Message details logged");
+    })
+    .catch(error => {
+        console.log('ERROR:', error); // print error;
+    });
   //const result = await pgClient.query(query).catch((e) => Promise.reject(
   //  {message: e.message}));
 
 //pgClient.end
 
-console.log("Message details logged");
 
 }
 
