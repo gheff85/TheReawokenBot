@@ -1,12 +1,6 @@
 const Discord = require("discord.js");
-const client = new Discord.Client();
-
-//var pg = require('pg');
-var conString = process.env.DATABASE_URL;
-const pgp = require('pg-promise')();
-
-
-
+const client = new Discord.Client({ ws: { intents: new Discord.Intents(Discord.Intents.ALL) }});
+  
 client.on("ready", () => {
   console.log(`Logged in as ${client.user.tag}!`)
 });
@@ -14,16 +8,12 @@ client.on("ready", () => {
 client.on("message", async(msg) => {
   let error;
 
+
   if(msg.author.bot)
   {
     return;
   }
   
-
- const result = await executeUpsert(msg).catch(e=>{
-    error = "executeUpsert: " + e.message;
-  });
-
 
   /////////////////////////////!rb cc/////////////////////////
   if(msg.content.toLowerCase() === "!rb cc"){
@@ -86,6 +76,7 @@ client.on("message", async(msg) => {
                                                          process.env.RAIDS_CHANNEL]).catch(e=>{
                                                           error = "addChannelToArray: " + e.message;
                                                         });
+
           if(!error){
             const MemberIDs = await getAllMembersFromRole(msg.guild.members, Role).catch(e=>{
               error = "getAllMemebrsFromRole: " + e.message;
@@ -107,7 +98,7 @@ client.on("message", async(msg) => {
                   });  
 
                   if(!error){
-                    await addInactiveStatus(msg, inactiveUsers, inactiveRole).catch(e =>{
+                    await kickInactive(msg, inactiveUsers, inactiveRole).catch(e =>{
                       error = "addInactiveStatus: " + e.message;
                     });
                   }
@@ -131,8 +122,6 @@ client.on("message", async(msg) => {
   
 });
 
-client.login(process.env.BOT_TOKEN);
-
 async function getMessageAndDateArray(channelMessages){
   let results = [];
   for(var message of channelMessages){
@@ -140,44 +129,6 @@ async function getMessageAndDateArray(channelMessages){
   }
 
   return results;
-}
-
-async function executeUpsert(msg){
-  //var pgPool = new pg.Pool({connectionString: conString, ssl: { rejectUnauthorized: false }});
-  //gClient.connect();
-
-  const db = pgp({connectionString: conString, ssl:{rejectUnauthorized: false}});
-  var user_id = msg.author.id;
-  var user_tag = msg.author.tag;
-  var user_displayname = msg.guild.member(msg.author).nickname;
-  var channel_id = msg.channel.id;
-  var channel_name = msg.channel.name;
-  var currentTime = Date.now();
-
-
-  var query = "INSERT INTO lastMessageSent(user_id, user_tag, user_displayname, channel_id, channel_name, last_message_dt) " +
-  "VALUES('" + user_id +"','" + user_tag +"', '" + user_displayname + "', '" + channel_id + "', '" + channel_name +
-  "', to_timestamp(" + currentTime /1000.0+ ")) " +
-  "ON CONFLICT (user_id) " +
-  "DO UPDATE SET user_displayname='" + user_displayname + "', " +
-  "channel_id='" + channel_id + "', channel_name='" + channel_name + "', last_message_dt=to_timestamp(" + currentTime /1000.0+ ");";
- 
-	
-	
-  console.log(db);
-  console.log(query);
-  db.none(query).then(data => { 
-	console.log("Message details logged");
-    })
-    .catch(error => {
-        console.log('ERROR:', error); // print error;
-    });
-  //const result = await pgClient.query(query).catch((e) => Promise.reject(
-  //  {message: e.message}));
-
-//pgClient.end
-
-
 }
 
 async function deleteMessages(messageList){
@@ -205,8 +156,7 @@ async function getMessagesBeforeDate(messagesList, numberOfDays){
   let filteredMgs = [];
   var cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - numberOfDays);
-  filteredMgs = messagesList.filter(m => m.Date < cutoffDate );
-
+  filteredMgs = messagesList.filter(m => m.Date.getTime() < cutoffDate.getTime() ).filter(m => m.JoinedDate.getTime() < cutoffDate.getTime() );
   return filteredMgs;
 }
 
@@ -215,14 +165,21 @@ async function getInactiveIDsAndSendInactiveUsersReply(msg, userRecentMsgs){
   let inactiveUsersMsg = [];
   let filteredUsers = [];
 
-  filteredUsers = await getMessagesBeforeDate(userRecentMsgs, 7)
+  filteredUsers = await getMessagesBeforeDate(userRecentMsgs, 21)
   .catch((e) => Promise.reject({message: e.message}));
 
-  inactiveUsersMsg = filteredUsers.map(elm => 
- `${elm.DisplayName}  lastActive: ${elm.Date.toLocaleString()}`);
+  inactiveUsersMsg = filteredUsers.map(elm => {
+    var lastActivity;
+    if(elm.Date.getTime() === new Date(2020, 01).getTime()){
+      lastActivity = "No Activity Recorded"
+    }
+    else{
+      lastActivity = elm.Date;
+    }
+ return `${elm.DisplayName}  lastActive: ${lastActivity}`});
  if(filteredUsers.length > 0)
  {
-    await msg.reply("The following members have been marked as inactive:\n`"+ inactiveUsersMsg.join('\n') +"`")
+    await msg.reply("The following members have been marked as inactive and removed from the clan:\n`"+ inactiveUsersMsg.join('\n') +"`")
     .catch((e) => Promise.reject({message: e.message}));
     return filteredUsers.map(elm => elm.UserID);
  }
@@ -238,7 +195,7 @@ async function getLastMessageFromEveryMember(guildMembers, MemberIDs, channelMes
 
   for(var memberID of MemberIDs)
   {
-      results.push(await getLastUserMessage(guildMembers, channelMessages, memberID)
+      results.push(await getLastUserMessage(guildMembers, channelMessages, memberID.user_id)
       .catch((e) => Promise.reject({message: e.message})));
   }
 
@@ -248,7 +205,7 @@ async function getLastMessageFromEveryMember(guildMembers, MemberIDs, channelMes
 async function getAllMembersFromRole(members, role){
 
   return await members.cache.filter(m => m.roles.cache.find(r => r == role)).filter(u => u.user.bot === false)
-                                                      .map(m => m.user.id);
+                                                      .map(m => {return {user_id: m.user.id, user_tag: m.user.tag, DisplayName: m.displayName, JoinedDate: m.joinedAt}});
 }
 
 async function addChannelToArray(channels, channelArray){
@@ -265,11 +222,11 @@ async function getRole(guild, roleName){
    return await guild.roles.cache.find(r=>r.name == roleName);
 }
 
-async function addInactiveStatus(initalMessage, inactiveMembers, inactiveRole)
+async function kickInactive(initalMessage, inactiveMembers, inactiveRole)
 {
    for(var member of inactiveMembers)
    {
-      await initalMessage.guild.members.cache.get(member).roles.add(inactiveRole)
+      await initalMessage.guild.members.cache.get(member).kick()
       .catch((e) => Promise.reject({message: e.message}));
    }
 }
@@ -288,10 +245,10 @@ async function getLastUserMessage(guildMembers, channelMessages, userID)
       return new Date(b.createdTimestamp) - new Date(a.createdTimestamp);
     })[0];
 
-      result = {Username: first.author.tag, DisplayName: displayName, UserID: userID, Date:new Date(first.createdTimestamp) };
+      result = {Username: first.author.tag, DisplayName: displayName, UserID: userID, Date:new Date(first.createdTimestamp), JoinedDate: member.joinedAt };
     }
     else{
-      result = {Username: userName, DisplayName: displayName,  UserID: userID, Date: new Date()};
+      result = {Username: userName, DisplayName: displayName,  UserID: userID, Date: new Date(2020, 01), JoinedDate: member.joinedAt};
     }
 
     return result;
@@ -328,3 +285,5 @@ async function getAllChannelMessages(channelList){
   
   return messageList;
 }
+
+client.login(process.env.BOT_TOKEN);
