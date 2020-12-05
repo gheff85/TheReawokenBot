@@ -155,8 +155,10 @@ async function isMemberAuthroized(member)
 async function getMessagesBeforeDate(messagesList, numberOfDays){
   let filteredMgs = [];
   var cutoffDate = new Date();
+  var newMemberLeeway = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - numberOfDays);
-  filteredMgs = messagesList.filter(m => m.Date.getTime() < cutoffDate.getTime() ).filter(m => m.JoinedDate.getTime() < cutoffDate.getTime() );
+  newMemberLeeway.setDate(newMemberLeeway.getDate() - 7);
+  filteredMgs = messagesList.filter(m => m.Date.getTime() < cutoffDate.getTime() ).filter(m => m.JoinedDate.getTime() < newMemberLeeway.getTime() );
   return filteredMgs;
 }
 
