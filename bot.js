@@ -23,7 +23,16 @@ client.on("message", async(msg) => {
 
     if(!error){
       console.log("Member Authorised");
-      const channelMessages = await getAllChannelMessages([msg.channel]).catch(e=>{
+
+      const channelList = await addChannelToArray(msg.client.channels,
+                                                        [process.env.CHAT_CHANNEL, 
+                                                         process.env.PVE_CHANNEL,
+                                                         process.env.PVP_CHANNEL,
+                                                         process.env.RAIDS_CHANNEL]).catch(e=>{
+                                                          error = "addChannelToArray: " + e.message;
+                                                        });
+      if(!error){
+      const channelMessages = await getAllChannelMessages(channelList).catch(e=>{
         error = "getAllChannelMessages: " + e.message;
       });
       
@@ -46,6 +55,7 @@ client.on("message", async(msg) => {
            });
         }
       }
+}
     }
   }
   
