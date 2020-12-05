@@ -1,4 +1,5 @@
 const Discord = require("discord.js");
+var moment = require("moment");
 const client = new Discord.Client({ ws: { intents: new Discord.Intents(Discord.Intents.ALL) }});
   
 client.on("ready", () => {
@@ -25,37 +26,47 @@ client.on("message", async(msg) => {
       console.log("Member Authorised");
 
       const channelList = await addChannelToArray(msg.client.channels,
-                                                        [process.env.CHAT_CHANNEL, 
-                                                         process.env.PVE_CHANNEL,
-                                                         process.env.PVP_CHANNEL,
-                                                         process.env.RAIDS_CHANNEL]).catch(e=>{
-                                                          error = "addChannelToArray: " + e.message;
-                                                        });
-      if(!error){
-      const channelMessages = await getAllChannelMessages(channelList).catch(e=>{
-        error = "getAllChannelMessages: " + e.message;
-      });
+                                                         [process.env.CHAT_CHANNEL, 
+                                                          process.env.PVE_CHANNEL,
+                                                          process.env.PVP_CHANNEL,
+                                                          process.env.RAIDS_CHANNEL]).catch(e=>{
+                                                           error = "addChannelToArray: " + e.message;
+                                                         });
       
-      messageArray = await getMessageAndDateArray(channelMessages).catch(e=>{
-        error = "getMessageAndDateArray: " + e.message;
-      });
-      console.log("Retrieved All Messages");
-      const oldMgs = await getMessagesBeforeDate(messageArray, 14).catch(e=>{
-        error = "getMessagesBeforeDate: " + e.message;
-      });
-      console.log("Filtered Messages younger than 13 days");
-      if (!error){
-        let count = await deleteMessages(oldMgs.map(m=>m.Message)).catch(e=>{
-          error = "deleteMessages: " + e.message;
+      if(!error){
+        let infoMsg = await msg.reply("Searching For Messages Older Than 21 Days....").then((result) => {return result}).catch(e=>{
+          console.log(e.message);
         });
-        
+        const channelMessages = await getAllChannelMessages(channelList).catch(e=>{
+          error = "getAllChannelMessages: " + e.message;
+        });
+      
         if(!error){
-           msg.reply("Deleted " + count + " Messages").catch(e=>{
-            console.log(e.message);
-           });
+          messageArray = await getMessageAndDateArray(channelMessages).catch(e=>{
+            error = "getMessageAndDateArray: " + e.message;
+          });
+
+          if(!error){
+            console.log("Retrieved All Messages");
+            const oldMgs = await getMessagesBeforeDate(messageArray, 21, false).catch(e=>{
+              error = "getMessagesBeforeDate: " + e.message;
+            });
+            
+            if (!error){
+              let count = await deleteMessages(oldMgs.map(m=>m.Message), infoMsg, msg).catch(e=>{
+                error = "deleteMessages: " + e.message;
+              });
+            
+              if(!error){
+                infoMsg.delete();
+                msg.reply("Deleted " + count + " Messages").catch(e=>{
+                  console.log(e.message);
+                });
+              }
+            }
+          }
         }
       }
-}
     }
   }
   
@@ -64,7 +75,6 @@ client.on("message", async(msg) => {
   /////////////////////////////!rb inactive/////////////////////////
   if (msg.content.toLowerCase() === "!rb inactive") {
   const authorized = await isMemberAuthroized(msg.member).catch(e=>{
-			 
       error = "isMemberAuth: " + e.message;
     });
     
@@ -79,14 +89,14 @@ client.on("message", async(msg) => {
         });
 
         if(!error){
-          const channelList = await addChannelToArray(msg.client.channels,
+         const channelList = await addChannelToArray(msg.client.channels,
                                                         [process.env.CHAT_CHANNEL, 
                                                          process.env.PVE_CHANNEL,
                                                          process.env.PVP_CHANNEL,
                                                          process.env.RAIDS_CHANNEL]).catch(e=>{
                                                           error = "addChannelToArray: " + e.message;
                                                         });
-
+        
           if(!error){
             const MemberIDs = await getAllMembersFromRole(msg.guild.members, Role).catch(e=>{
               error = "getAllMemebrsFromRole: " + e.message;
@@ -122,6 +132,60 @@ client.on("message", async(msg) => {
   }
   
   
+  /////////////////////////////!rb afk/////////////////////////
+  if (msg.content.toLowerCase() === "!rb afk") {
+    
+    var startDate;
+    var endDate;
+
+    let infoMsg = await msg.reply("Start Date (mm/dd/yyyy format)").then((result) => {return result}).catch(e=>{
+      error = e.message;
+    });
+
+    if(!error){
+      startDate = await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max:1, time:15000, errors: ['time']}).then(collected => {
+        return verifyDate(collected.first(), msg, infoMsg, 1);
+      }).catch(async (e) => {
+        await infoMsg.delete();
+        error = e.message;
+        if(!error){
+          error = "Command Timed out";
+        }
+      });
+
+      if(!error){
+        await infoMsg.delete();
+        infoMsg = await msg.reply("End Date (mm/dd/yyyy format)").then((result) => {return result}).catch(e=>{
+          error = e.message;
+        });
+
+        if(!error){
+          endDate = await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max:1, time:15000}).then(collected => {
+            return verifyDate(collected.first(), msg, infoMsg, 1);
+          }).catch(async (e)=>{
+            await infoMsg.delete();
+            error = e.message;
+            if(!error){
+              error = "Command Timed out";
+            }
+          });
+          
+          if(moment(endDate, "MM/DD/YYYY").isBefore(moment(startDate, "MM/DD/YYYY"))){
+            await infoMsg.delete();
+            error = "End Date is before Start Date. AFK Creation Cancelled"
+          }
+
+          if(!error){
+            await infoMsg.delete();
+            await msg.channel.send("User: " + msg.author.tag + " is AFK \nStart Date: " + startDate + "\nEnd Date: " + endDate);
+            await msg.delete();
+          }
+        }
+      }
+    }
+  }
+      
+  
    /////////////////////////////Reply to message with error/////////////////////////
   if(error)
   {
@@ -129,8 +193,56 @@ client.on("message", async(msg) => {
       console.log(e.message);
     });
   }
-  
 });
+
+async function verifyDate(message, msg, infoMsg, attempt)
+{
+  var dateString = message.content;
+    if(moment(dateString, "MM/DD/YYYY").isValid()){
+      if(!moment(dateString, "MM/DD/YYYY").isBefore(moment())){
+        await message.delete();
+        return dateString;
+      }
+      else{
+        if(attempt > 3){
+          throw new Error("AFK Event Creation Cancelled");
+        }
+        infoMsg = await msg.reply("Date has already passed, please enter a Date in the future in the following format: mm/dd/yyyy").then((result) => {return result}).catch(e=>{
+          console.log(e.message);
+        });
+        attempt++;
+        await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max:1, time:15000}).then(collected => {
+          return verifyDate(collected.first(), msg, infoMsg, attempt).catch(async (e)=>{
+            await infoMsg.delete();
+            error = e.message;
+            if(!error){
+              error = "Command Timed out";
+            }
+          });
+        });
+      }
+    }
+    else{
+      await message.delete();
+      await infoMsg.delete();
+      if(attempt > 3){
+        throw new Error("AFK Event Creation Cancelled");
+      }
+      infoMsg = await msg.reply("Invalid Date, please enter a Date in the following format: mm/dd/yyyy").then((result) => {return result}).catch(e=>{
+        console.log(e.message);
+      });
+      attempt++;
+      await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max:1, time:15000}).then(collected => {
+        return verifyDate(collected.first(), msg, infoMsg, attempt).catch(async (e)=>{
+          await infoMsg.delete();
+          error = e.message;
+          if(!error){
+            error = "Command Timed out";
+          }
+        });
+      });
+    }
+}
 
 async function getMessageAndDateArray(channelMessages){
   let results = [];
@@ -141,12 +253,17 @@ async function getMessageAndDateArray(channelMessages){
   return results;
 }
 
-async function deleteMessages(messageList){
+async function deleteMessages(messageList, infoMsg, msg){
  let count =0;
+ 
+var test = messageList.length;
   for(var message of messageList)
   {
+    infoMsg.delete();
+    infoMsg = msg.reply("Deleting Message " + (count + 1) + " Of " + messageList.length).then((result) => {return result} ).catch(e=>{
+      console.log(e.message);
+    });
     await message.delete({timeout: 1500}).then(() => {count = count + 1; console.log("Message Deleted");}).catch((e) => Promise.reject({message: e.message}));
-
   }
 
 return count;
@@ -162,13 +279,21 @@ async function isMemberAuthroized(member)
   }
 }
 
-async function getMessagesBeforeDate(messagesList, numberOfDays){
+async function getMessagesBeforeDate(messagesList, numberOfDays, memberData){
   let filteredMgs = [];
   var cutoffDate = new Date();
-  var newMemberLeeway = new Date();
+  var newMemberLeeway = new Date();					   
   cutoffDate.setDate(cutoffDate.getDate() - numberOfDays);
-  newMemberLeeway.setDate(newMemberLeeway.getDate() - 7);
+  newMemberLeeway.setDate(newMemberLeeway.getDate() - 7);													 
+  
+  if(memberData){
+
   filteredMgs = messagesList.filter(m => m.Date.getTime() < cutoffDate.getTime() ).filter(m => m.JoinedDate.getTime() < newMemberLeeway.getTime() );
+  }
+  else{
+    filteredMgs = messagesList.filter(m => m.Date.getTime() < cutoffDate.getTime() )
+  }
+
   return filteredMgs;
 }
 
@@ -177,7 +302,7 @@ async function getInactiveIDsAndSendInactiveUsersReply(msg, userRecentMsgs){
   let inactiveUsersMsg = [];
   let filteredUsers = [];
 
-  filteredUsers = await getMessagesBeforeDate(userRecentMsgs, 21)
+  filteredUsers = await getMessagesBeforeDate(userRecentMsgs, 21, true)
   .catch((e) => Promise.reject({message: e.message}));
 
   inactiveUsersMsg = filteredUsers.map(elm => {
