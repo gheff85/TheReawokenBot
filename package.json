@@ -17,8 +17,7 @@
   "dependencies": {
 
     "discord.js": "12.2.0",
-    "pg": "^8.5.1",
-    "pg-promise": "^10.8.1",
+    "moment": "^2.29.1",
     "request": "2.81.0"
 
   },
