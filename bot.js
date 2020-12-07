@@ -7,7 +7,7 @@ client.on("ready", () => {
 });
 
 client.on("message", async(msg) => {
-  let error;
+  var error;
 
 
   if(msg.author.bot)
@@ -25,7 +25,7 @@ client.on("message", async(msg) => {
     if(!error){
       console.log("Member Authorised");
 
-      const channelList = await addChannelToArray(msg.client.channels,
+       const channelList = await addChannelToArray(msg.client.channels,
                                                          [process.env.CHAT_CHANNEL, 
                                                           process.env.PVE_CHANNEL,
                                                           process.env.PVP_CHANNEL,
@@ -33,6 +33,7 @@ client.on("message", async(msg) => {
                                                            error = "addChannelToArray: " + e.message;
                                                          });
       
+
       if(!error){
         let infoMsg = await msg.reply("Searching For Messages Older Than 21 Days....").then((result) => {return result}).catch(e=>{
           console.log(e.message);
@@ -89,14 +90,14 @@ client.on("message", async(msg) => {
         });
 
         if(!error){
-         const channelList = await addChannelToArray(msg.client.channels,
+          const channelList = await addChannelToArray(msg.client.channels,
                                                         [process.env.CHAT_CHANNEL, 
                                                          process.env.PVE_CHANNEL,
                                                          process.env.PVP_CHANNEL,
                                                          process.env.RAIDS_CHANNEL]).catch(e=>{
                                                           error = "addChannelToArray: " + e.message;
                                                         });
-        
+
           if(!error){
             const MemberIDs = await getAllMembersFromRole(msg.guild.members, Role).catch(e=>{
               error = "getAllMemebrsFromRole: " + e.message;
@@ -143,10 +144,10 @@ client.on("message", async(msg) => {
     });
 
     if(!error){
-      startDate = await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max:1, time:15000, errors: ['time']}).then(collected => {
-        return verifyDate(collected.first(), msg, infoMsg, 1);
+      startDate = await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max:1, time:25000, errors: ['time']}).then(async (collected) => {
+        return await verifyDate(collected.first(), msg, infoMsg, 1).catch(e => {throw(e)});
       }).catch(async (e) => {
-        await infoMsg.delete();
+        await infoMsg.delete().catch(e=>{console.log(e.message)});
         error = e.message;
         if(!error){
           error = "Command Timed out";
@@ -154,16 +155,16 @@ client.on("message", async(msg) => {
       });
 
       if(!error){
-        await infoMsg.delete();
+        await infoMsg.delete().catch(e=>{console.log(e.message)});
         infoMsg = await msg.reply("End Date (mm/dd/yyyy format)").then((result) => {return result}).catch(e=>{
           error = e.message;
         });
 
         if(!error){
-          endDate = await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max:1, time:15000}).then(collected => {
-            return verifyDate(collected.first(), msg, infoMsg, 1);
+          endDate = await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max:1, time:25000, errors:['time]']}).then(async (collected) => {
+            return await verifyDate(collected.first(), msg, infoMsg, 1).catch(e => {throw(e)});
           }).catch(async (e)=>{
-            await infoMsg.delete();
+            await infoMsg.delete().catch(e=>{console.log(e.message)});
             error = e.message;
             if(!error){
               error = "Command Timed out";
@@ -171,14 +172,14 @@ client.on("message", async(msg) => {
           });
           
           if(moment(endDate, "MM/DD/YYYY").isBefore(moment(startDate, "MM/DD/YYYY"))){
-            await infoMsg.delete();
+            await infoMsg.delete().catch(e=>{console.log(e.message)});
             error = "End Date is before Start Date. AFK Creation Cancelled"
           }
 
           if(!error){
-            await infoMsg.delete();
-            await msg.channel.send("User: " + msg.author.tag + " is AFK \nStart Date: " + startDate + "\nEnd Date: " + endDate);
-            await msg.delete();
+            await infoMsg.delete().catch(e=>{console.log(e.message)});
+            await msg.channel.send("User: " + msg.author.tag + " is AFK \nStart Date: " + startDate + "\nEnd Date: " + endDate).catch(e=>{console.log(e.message)});
+            await msg.delete().catch(e=>{console.log(e.message)});
           }
         }
       }
@@ -198,50 +199,66 @@ client.on("message", async(msg) => {
 async function verifyDate(message, msg, infoMsg, attempt)
 {
   var dateString = message.content;
-    if(moment(dateString, "MM/DD/YYYY").isValid()){
+    
+    if(moment(dateString, "MM/DD/YYYY").isValid() && isInputFormatValid(dateString)){
       if(!moment(dateString, "MM/DD/YYYY").isBefore(moment())){
-        await message.delete();
+        await message.delete().catch(e=>{console.log(e.message)});
         return dateString;
       }
       else{
-        if(attempt > 3){
-          throw new Error("AFK Event Creation Cancelled");
+        if(attempt > 2){
+          throw({message: "Invalid Date: AFK Event Creation Cancelled"});
         }
         infoMsg = await msg.reply("Date has already passed, please enter a Date in the future in the following format: mm/dd/yyyy").then((result) => {return result}).catch(e=>{
           console.log(e.message);
         });
         attempt++;
-        await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max:1, time:15000}).then(collected => {
-          return verifyDate(collected.first(), msg, infoMsg, attempt).catch(async (e)=>{
-            await infoMsg.delete();
-            error = e.message;
-            if(!error){
-              error = "Command Timed out";
+        await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max:1, time:25000, errors:['time']}).then(async (collected) => {
+          return await verifyDate(collected.first(), msg, infoMsg, attempt).catch(e=> {throw(e)});
+        }).catch(async (e)=>{
+            await infoMsg.delete().catch(e=>{console.log(e.message)});
+            if(!e.message){
+              return Promise.reject({message: "Command Timed Out"});
+            }
+            else{
+              return Promise.reject({message: e.message});
             }
           });
-        });
       }
     }
     else{
-      await message.delete();
-      await infoMsg.delete();
-      if(attempt > 3){
-        throw new Error("AFK Event Creation Cancelled");
+      await message.delete().catch(e=>{console.log(e.message)});
+      await infoMsg.delete().catch(e=>{console.log(e.message)});
+      if(attempt > 2){
+        throw({message: "Invalid Date: AFK Event Creation Cancelled"});
       }
       infoMsg = await msg.reply("Invalid Date, please enter a Date in the following format: mm/dd/yyyy").then((result) => {return result}).catch(e=>{
         console.log(e.message);
       });
       attempt++;
-      await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max:1, time:15000}).then(collected => {
-        return verifyDate(collected.first(), msg, infoMsg, attempt).catch(async (e)=>{
-          await infoMsg.delete();
-          error = e.message;
-          if(!error){
-            error = "Command Timed out";
+      await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max:1, time:25000, errors:['time']}).then(async (collected) => {
+        return await verifyDate(collected.first(), msg, infoMsg, attempt).catch(e => {throw(e)});
+      }).catch(async (e)=>{
+          await infoMsg.delete().catch(e=>{console.log(e.message)});
+          if(!e.message){
+            return Promise.reject({message: "Command Timed Out"});
+          }
+          else{
+            return Promise.reject({message: e.message});
           }
         });
-      });
     }
+}
+
+function isInputFormatValid(input){
+  
+  var pattern = /^\d{2}\/\d{2}\/\d{4}$/;
+
+  if(!pattern.test(input)){
+    return false;
+  }
+
+  return true;
 }
 
 async function getMessageAndDateArray(channelMessages){
