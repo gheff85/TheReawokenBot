@@ -1,14 +1,19 @@
 const Discord = require("discord.js");
+const axios = require('axios').default;
 var moment = require("moment");
 const client = new Discord.Client({ ws: { intents: new Discord.Intents(Discord.Intents.ALL) }});
   
 client.on("ready", () => {
   console.log(`Logged in as ${client.user.tag}!`)
 });
-
+var awaitingResponse = [];
 client.on("message", async(msg) => {
   var error;
-
+  
+  if(awaitingResponse.includes(msg.author.id))
+  {
+    return;
+  }
 
   if(msg.author.bot)
   {
@@ -23,6 +28,7 @@ client.on("message", async(msg) => {
     });
 
     if(!error){
+      awaitingResponse.push(msg.author.id);
       console.log("Member Authorised");
 
        const channelList = await addChannelToArray(msg.client.channels,
@@ -33,7 +39,6 @@ client.on("message", async(msg) => {
                                                            error = "addChannelToArray: " + e.message;
                                                          });
       
-
       if(!error){
         let infoMsg = await msg.reply("Searching For Messages Older Than 21 Days....").then((result) => {return result}).catch(e=>{
           console.log(e.message);
@@ -59,6 +64,7 @@ client.on("message", async(msg) => {
               });
             
               if(!error){
+                removeFromAwaitingResponse(msg.author.id);
                 infoMsg.delete();
                 msg.reply("Deleted " + count + " Messages").catch(e=>{
                   console.log(e.message);
@@ -75,54 +81,50 @@ client.on("message", async(msg) => {
 
   /////////////////////////////!rb inactive/////////////////////////
   if (msg.content.toLowerCase() === "!rb inactive") {
-  const authorized = await isMemberAuthroized(msg.member).catch(e=>{
+    const authorized = await isMemberAuthroized(msg.member).catch(e=>{
       error = "isMemberAuth: " + e.message;
     });
     
     if(!error){
-      const inactiveRole = await getRole(msg.guild, "Inactive").catch(e=>{
-        error = "getInactiveRole: " + e.message;
-      });
-    
-      if(!error){
-        const Role = await getRole(msg.guild, "Registered").catch(e=>{
+      awaitingResponse.push(msg.author.id);
+      const Role = await getRole(msg.guild, "Registered").catch(e=>{
           error = "getRegisteredRole: " + e.message;
-        });
+      });
 
-        if(!error){
-          const channelList = await addChannelToArray(msg.client.channels,
+      if(!error){
+        const channelList = await addChannelToArray(msg.client.channels,
                                                         [process.env.CHAT_CHANNEL, 
                                                          process.env.PVE_CHANNEL,
                                                          process.env.PVP_CHANNEL,
                                                          process.env.RAIDS_CHANNEL]).catch(e=>{
                                                           error = "addChannelToArray: " + e.message;
                                                         });
+       
+        if(!error){
+          const MemberIDs = await getAllMembersFromRole(msg.guild.members, Role).catch(e=>{
+              error = "getAllMemebrsFromRole: " + e.message;
+          });
 
           if(!error){
-            const MemberIDs = await getAllMembersFromRole(msg.guild.members, Role).catch(e=>{
-              error = "getAllMemebrsFromRole: " + e.message;
+            const channelMessages = await getAllChannelMessages(channelList).catch(e=>{
+                error = "getAllChannelMessages: " + e.message;
             });
 
             if(!error){
-              const channelMessages = await getAllChannelMessages(channelList).catch(e=>{
-                error = "getAllChannelMessages: " + e.message;
+              const userRecentMsgs = await getLastMessageFromEveryMember(msg.guild.members, MemberIDs, channelMessages).catch(e => {
+                  error = "getLastMessageFromEveryMember: " + e.message;
               });
 
               if(!error){
-                const userRecentMsgs = await getLastMessageFromEveryMember(msg.guild.members, MemberIDs, channelMessages).catch(e => {
-                  error = "getLastMessageFromEveryMember: " + e.message;
-                });
+                const inactiveUsers = await getInactiveIDsAndSendInactiveUsersReply(msg, userRecentMsgs).catch(e=>{
+                    error = "getInactiveIDsAndSend: " + e.message;
+                });  
 
                 if(!error){
-                  const inactiveUsers = await getInactiveIDsAndSendInactiveUsersReply(msg, userRecentMsgs).catch(e=>{
-                    error = "getInactiveIDsAndSend: " + e.message;
-                  });  
-
-                  if(!error){
-                    await kickInactive(msg, inactiveUsers, inactiveRole).catch(e =>{
-                      error = "addInactiveStatus: " + e.message;
-                    });
-                  }
+                  removeFromAwaitingResponse(msg.author.id);
+                  //await kickInactive(msg, inactiveUsers).catch(e =>{
+                  //    error = "addInactiveStatus: " + e.message;
+                  //});
                 }
               }
             }
@@ -131,23 +133,24 @@ client.on("message", async(msg) => {
       }
     }
   }
-  
-  
+
   /////////////////////////////!rb afk/////////////////////////
   if (msg.content.toLowerCase() === "!rb afk") {
     
     var startDate;
     var endDate;
+    awaitingResponse.push(msg.author.id);
 
     let infoMsg = await msg.reply("Start Date (mm/dd/yyyy format)").then((result) => {return result}).catch(e=>{
       error = e.message;
     });
-
+    
     if(!error){
       startDate = await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max:1, time:25000, errors: ['time']}).then(async (collected) => {
+        await infoMsg.delete().catch(e=>{console.log(e.message)});
         return await verifyDate(collected.first(), msg, infoMsg, 1).catch(e => {throw(e)});
       }).catch(async (e) => {
-        await infoMsg.delete().catch(e=>{console.log(e.message)});
+        
         error = e.message;
         if(!error){
           error = "Command Timed out";
@@ -155,16 +158,16 @@ client.on("message", async(msg) => {
       });
 
       if(!error){
-        await infoMsg.delete().catch(e=>{console.log(e.message)});
+        
         infoMsg = await msg.reply("End Date (mm/dd/yyyy format)").then((result) => {return result}).catch(e=>{
           error = e.message;
         });
 
         if(!error){
           endDate = await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max:1, time:25000, errors:['time]']}).then(async (collected) => {
+            await infoMsg.delete().catch(e=>{console.log(e.message)});
             return await verifyDate(collected.first(), msg, infoMsg, 1).catch(e => {throw(e)});
           }).catch(async (e)=>{
-            await infoMsg.delete().catch(e=>{console.log(e.message)});
             error = e.message;
             if(!error){
               error = "Command Timed out";
@@ -172,12 +175,11 @@ client.on("message", async(msg) => {
           });
           
           if(moment(endDate, "MM/DD/YYYY").isBefore(moment(startDate, "MM/DD/YYYY"))){
-            await infoMsg.delete().catch(e=>{console.log(e.message)});
             error = "End Date is before Start Date. AFK Creation Cancelled"
           }
 
           if(!error){
-            await infoMsg.delete().catch(e=>{console.log(e.message)});
+            removeFromAwaitingResponse(msg.author.id);
             await msg.channel.send("User: " + msg.author.tag + " is AFK \nStart Date: " + startDate + "\nEnd Date: " + endDate).catch(e=>{console.log(e.message)});
             await msg.delete().catch(e=>{console.log(e.message)});
           }
@@ -186,21 +188,160 @@ client.on("message", async(msg) => {
     }
   }
       
-  
+  /////////////////////////////////!rb compare//////////////////////////////////////
+  if (msg.content.toLowerCase() === "!rb compare") {
+    const authorized = await isMemberAuthroized(msg.member).catch(e=>{
+        error = "isMemberAuth: " + e.message;
+    });
+
+    let notInClan = [];
+    let notInDiscord = [];
+
+    if(!error){
+      awaitingResponse.push(msg.author.id);
+      const Role = await getRole(msg.guild, "Registered").catch(e=>{
+          error = "getRegisteredRole: " + e.message;
+      });
+
+      if(!error){
+        const MemberIDs = await getAllMembersFromRole(msg.guild.members, Role).catch(e=>{
+            error = "getAllMemebrsFromRole: " + e.message;
+        });
+
+        if(!error){
+          const clanMembers = await getClanMembers().catch(e=>{
+            error = "getAllMemebrsFromRole: " + e.message;
+          });
+
+          if(!error){
+            
+            notInClan = await getNotInClan(clanMembers, MemberIDs).catch(e=>{
+              error = "Error finding members not in Clan";
+            })
+
+            if(!error){
+              notInDiscord = await getNotInDiscord(clanMembers, MemberIDs).catch(e=>{
+                error = "Error finding members not in Discord";
+              })
+
+              
+              removeFromAwaitingResponse(msg.author.id);
+              await msg.reply("The following members are in Discord but not the clan:\n`"+ notInClan.join('\n') +"`")
+              .catch((e) => Promise.reject({message: e.message}));
+
+              await msg.reply("The following members are in the Clan but not registered in Discord:\n`"+ getNotInDiscordText(notInDiscord) +"`")
+              .catch((e) => Promise.reject({message: e.message}));
+            }
+          }
+        }
+      }
+    }
+  }
+
    /////////////////////////////Reply to message with error/////////////////////////
   if(error)
   {
+    removeFromAwaitingResponse(msg.author.id);
     await msg.reply(error).catch(e=>{
       console.log(e.message);
     });
   }
 });
 
+function getNotInDiscordText(notInDiscord){
+    var text = '';
+    for(member of notInDiscord){
+      text += '{' + member.displayName + ', ' + member.lastSeenDisplayName + '}\n'; 
+    }
+    return text;
+}
+
+async function getNotInClan(clanMembers, MemberIDs){
+  var results = [];
+  for(var member of MemberIDs){
+    if(!clanMembers.map(c=>c.lastSeenDisplayName.toLowerCase()).includes(member.DisplayName.toLowerCase()) &&
+       !clanMembers.map(c=>c.displayName.toLowerCase()).includes(member.DisplayName.toLowerCase())){
+      results.push(member.DisplayName);
+    }
+  }
+
+  return results;
+}
+
+async function getNotInDiscord(clanMembers, MemberIDs){
+  var results = [];
+  for(var member of clanMembers){
+    if((MemberIDs.filter(m => m.DisplayName.toLowerCase() == member.lastSeenDisplayName.toLowerCase()).length == 0) &&
+       (MemberIDs.filter(m => m.DisplayName.toLowerCase() == member.displayName.toLowerCase()).length == 0)){
+      results.push(member);
+    }
+  }
+
+  return results;
+}
+
+async function getClanMembers(){
+  var apiKey = process.env.BUNGIE_API_KEY;
+  let config = {
+    headers: {
+      'X-API-Key': apiKey,
+    }
+  }
+  
+  let resp = await axios.get(process.env.GET_MEMBERS_ENDPOINT, config).then(r => {
+  let memberList = [];  
+  var memberResults =r.data.Response.results;
+    for(var member of memberResults){
+      memberList.push({lastSeenDisplayName: member.destinyUserInfo.LastSeenDisplayName, displayName: member.destinyUserInfo.displayName})
+    }
+    return memberList;
+  }).catch(e=> {
+    var error1 = e.message;
+  })
+
+  return resp;
+}
+
+async function getUserHolidays(msg){
+  var result = [];
+  const holidayChannelId = process.env.MEMBERS_HOLIDAYS
+  const holChannel = await addChannelToArray(msg.client.channels,
+    [holidayChannelId]).catch(e=>{
+      error = "addChannelToArray: " + e.message;
+    });
+  const holidayMsgs = await getAllChannelMessages(holChannel).catch(e=>{
+    console.log(e.message);
+  })
+
+  for(var message of holidayMsgs){
+    if(message.content.substring(0,4) == 'User'){
+      var isIndex = message.content.indexOf(' is ');
+      var user = message.content.substring(6, isIndex);
+      var startIndex = message.content.indexOf('Start Date');
+      var startDate = moment(message.content.substring(startIndex + 12, startIndex + 22), 'MM/DD/YYYY');
+      startIndex = message.content.indexOf('End Date');
+      var endDate = moment(message.content.substring(startIndex + 10, startIndex + 20), 'MM/DD/YYYY');
+
+      if(startDate.isBefore(moment()) && endDate.isAfter(moment()) ){
+        result.push(msg.client.users.cache.find(u=>u.tag == user).id);
+      }
+    };
+  }
+
+  return result;
+
+}
+
+function removeFromAwaitingResponse(userID){
+  var index = awaitingResponse.indexOf(userID);
+  awaitingResponse.splice(index,1);
+}
+
 async function verifyDate(message, msg, infoMsg, attempt)
 {
   var dateString = message.content;
     
-    if(moment(dateString, "MM/DD/YYYY").isValid() && isInputFormatValid(dateString)){
+    if(isInputFormatValid(dateString) && moment(dateString, "MM/DD/YYYY").isValid()){
       if(!moment(dateString, "MM/DD/YYYY").isBefore(moment())){
         await message.delete().catch(e=>{console.log(e.message)});
         return dateString;
@@ -213,10 +354,10 @@ async function verifyDate(message, msg, infoMsg, attempt)
           console.log(e.message);
         });
         attempt++;
-        await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max:1, time:25000, errors:['time']}).then(async (collected) => {
+        dateString = await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max:1, time:25000, errors:['time']}).then(async (collected) => {
+          await infoMsg.delete().catch(e=>{console.log(e.message)});
           return await verifyDate(collected.first(), msg, infoMsg, attempt).catch(e=> {throw(e)});
         }).catch(async (e)=>{
-            await infoMsg.delete().catch(e=>{console.log(e.message)});
             if(!e.message){
               return Promise.reject({message: "Command Timed Out"});
             }
@@ -228,7 +369,6 @@ async function verifyDate(message, msg, infoMsg, attempt)
     }
     else{
       await message.delete().catch(e=>{console.log(e.message)});
-      await infoMsg.delete().catch(e=>{console.log(e.message)});
       if(attempt > 2){
         throw({message: "Invalid Date: AFK Event Creation Cancelled"});
       }
@@ -236,10 +376,10 @@ async function verifyDate(message, msg, infoMsg, attempt)
         console.log(e.message);
       });
       attempt++;
-      await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max:1, time:25000, errors:['time']}).then(async (collected) => {
+      dateString = await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max:1, time:25000, errors:['time']}).then(async (collected) => {
+        await infoMsg.delete().catch(e=>{console.log(e.message)});
         return await verifyDate(collected.first(), msg, infoMsg, attempt).catch(e => {throw(e)});
       }).catch(async (e)=>{
-          await infoMsg.delete().catch(e=>{console.log(e.message)});
           if(!e.message){
             return Promise.reject({message: "Command Timed Out"});
           }
@@ -248,6 +388,8 @@ async function verifyDate(message, msg, infoMsg, attempt)
           }
         });
     }
+
+    return dateString;
 }
 
 function isInputFormatValid(input){
@@ -318,9 +460,13 @@ async function getInactiveIDsAndSendInactiveUsersReply(msg, userRecentMsgs){
   
   let inactiveUsersMsg = [];
   let filteredUsers = [];
+  const MembersOnHoliday = await getUserHolidays(msg).catch(e=>{
+    console.log(e.message);
+  })
 
   filteredUsers = await getMessagesBeforeDate(userRecentMsgs, 21, true)
   .catch((e) => Promise.reject({message: e.message}));
+  filteredUsers = filteredUsers.filter(u => !MembersOnHoliday.includes(u.UserID));
 
   inactiveUsersMsg = filteredUsers.map(elm => {
     var lastActivity;
@@ -333,7 +479,7 @@ async function getInactiveIDsAndSendInactiveUsersReply(msg, userRecentMsgs){
  return `${elm.DisplayName}  lastActive: ${lastActivity}`});
  if(filteredUsers.length > 0)
  {
-    await msg.reply("The following members have been marked as inactive and removed from the clan:\n`"+ inactiveUsersMsg.join('\n') +"`")
+    await msg.reply("The following members have been marked as inactive to be removed from the clan:\n`"+ inactiveUsersMsg.join('\n') +"`")
     .catch((e) => Promise.reject({message: e.message}));
     return filteredUsers.map(elm => elm.UserID);
  }
@@ -376,7 +522,7 @@ async function getRole(guild, roleName){
    return await guild.roles.cache.find(r=>r.name == roleName);
 }
 
-async function kickInactive(initalMessage, inactiveMembers, inactiveRole)
+async function kickInactive(initalMessage, inactiveMembers)
 {
    for(var member of inactiveMembers)
    {
