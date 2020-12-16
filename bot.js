@@ -414,11 +414,11 @@ async function getMessageAndDateArray(channelMessages){
 
 async function deleteMessages(messageList, infoMsg, msg){
  let count =0;
- await infoMsg.delete();
+
 var test = messageList.length;
   for(var message of messageList)
   {
-   
+    await infoMsg.delete();
     infoMsg = msg.reply("Deleting Message " + (count + 1) + " Of " + messageList.length).then((result) => {return result} ).catch(e=>{
       console.log(e.message);
     });
