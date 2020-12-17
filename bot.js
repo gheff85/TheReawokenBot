@@ -418,9 +418,10 @@ async function deleteMessages(messageList, infoMsg, msg){
 var test = messageList.length;
   for(var message of messageList)
   {
-    await infoMsg.delete();
-    infoMsg = await msg.reply("Deleting Message " + (count + 1) + " Of " + messageList.length).then((result) => {return result} ).catch(e=>{
-      console.log(e.message);
+    //await infoMsg.delete();
+    //infoMsg = await msg.reply("Deleting Message " + (count + 1) + " Of " + messageList.length).then((result) => {return result} ).catch(e=>{
+    await infoMsg.edit("Deleting Message " + (count + 1) + " Of " + messageList.length).then((result) => {return result} ).catch(e=>{
+       console.log(e.message);
     });
     await message.delete({timeout: 1500}).then(() => {count = count + 1; console.log("Message Deleted");}).catch((e) => Promise.reject({message: e.message}));
   }
