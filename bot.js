@@ -65,8 +65,8 @@ client.on("message", async(msg) => {
             
               if(!error){
                 removeFromAwaitingResponse(msg.author.id);
-                infoMsg.delete();
-                msg.reply("Deleted " + count + " Messages").catch(e=>{
+                await infoMsg.delete();
+                await msg.reply("Deleted " + count + " Messages").catch(e=>{
                   console.log(e.message);
                 });
               }
@@ -413,19 +413,15 @@ async function getMessageAndDateArray(channelMessages){
 }
 
 async function deleteMessages(messageList, infoMsg, msg){
- let count =0;
-
-var test = messageList.length;
+  let count =0;
+  await infoMsg.delete();
+  infoMsg = msg.reply("Deleting " + (messageList.length) + " Messages...");
   for(var message of messageList)
   {
-    await infoMsg.delete();
-    infoMsg = await msg.reply("Deleting Message " + (count + 1) + " Of " + messageList.length).then((result) => {return result} ).catch(e=>{
-       console.log(e.message);
-    });
     await message.delete({timeout: 1500}).then(() => {count = count + 1; console.log("Message Deleted");}).catch((e) => Promise.reject({message: e.message}));
   }
 
-return count;
+  return count;
 }
 
 async function isMemberAuthroized(member)
