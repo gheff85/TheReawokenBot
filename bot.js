@@ -20,7 +20,12 @@ client.on("message", async(msg) => {
     return;
   }
   
-
+  /////////////////////////////assign role on register////////
+  if(msg.channel.id == process.env.REGISTER_HERE_CHANNEL && msg.content.toLowerCase().includes("Successfully synced")){
+    console.log("Member has been synced");
+    });
+    
+    
   /////////////////////////////!rb cc/////////////////////////
   if(msg.content.toLowerCase() === "!rb cc"){
     const authorized = await isMemberAuthroized(msg.member).catch(e=>{
@@ -65,7 +70,7 @@ client.on("message", async(msg) => {
             
               if(!error){
                 removeFromAwaitingResponse(msg.author.id);
-                await infoMsg.delete();
+                await infoMsg.delete().catch(e=>{console.log(e.message)});
                 await msg.reply("Deleted " + count + " Messages").catch(e=>{
                   console.log(e.message);
                 });
