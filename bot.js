@@ -15,11 +15,7 @@ client.on("message", async(msg) => {
     return;
   }
 
-  if(msg.author.bot)
-  {
-    return;
-  }
-  
+ 
   /////////////////////////////assign role on register////////
   if(msg.channel.id === process.env.REGISTER_HERE_CHANNEL && msg.content.includes("Successfully synced")){
     let user = msg.content.split(":")[0];
@@ -30,10 +26,16 @@ client.on("message", async(msg) => {
     console.log("Member: " + user + " has been synced");
     console.log(guildMember);
     };
-    
+   
+  
+  ////////Stop bot from replying to bots from this point on//////////
+  if(msg.author.bot)
+  {
+    return;
+  }
     
   /////////////////////////////!rb cc/////////////////////////
-  if(msg.content.toLowerCase() === "!rb cc"){
+  if(msg.channel.id === process.env.REAWOKEN_COMMANDS_CHANNEL && msg.content.toLowerCase() === "!rb cc"){
     const authorized = await isMemberAuthroized(msg.member).catch(e=>{
       error = "isMemberAuth: " + e.message;
     });
@@ -91,7 +93,7 @@ client.on("message", async(msg) => {
 
 
   /////////////////////////////!rb inactive/////////////////////////
-  if (msg.content.toLowerCase() === "!rb inactive") {
+  if (msg.channel.id === process.env.REAWOKEN_COMMANDS_CHANNEL && msg.content.toLowerCase() === "!rb inactive") {
     const authorized = await isMemberAuthroized(msg.member).catch(e=>{
       error = "isMemberAuth: " + e.message;
     });
@@ -146,7 +148,7 @@ client.on("message", async(msg) => {
   }
 
   /////////////////////////////!rb afk/////////////////////////
-  if (msg.content.toLowerCase() === "!rb afk") {
+  if (msg.channel.id === process.env.MEMBERS_HOLIDAY_CHANNEL && msg.content.toLowerCase() === "!rb afk") {
     
     var startDate;
     var endDate;
@@ -157,7 +159,7 @@ client.on("message", async(msg) => {
     });
     
     if(!error){
-      startDate = await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max:1, time:25000, errors: ['time']}).then(async (collected) => {
+      startDate = await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max:1, time:45000, errors: ['time']}).then(async (collected) => {
         await infoMsg.delete().catch(e=>{console.log(e.message)});
         return await verifyDate(collected.first(), msg, infoMsg, 1).catch(e => {throw(e)});
       }).catch(async (e) => {
@@ -175,7 +177,7 @@ client.on("message", async(msg) => {
         });
 
         if(!error){
-          endDate = await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max:1, time:25000, errors:['time]']}).then(async (collected) => {
+          endDate = await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max:1, time:45000, errors:['time]']}).then(async (collected) => {
             await infoMsg.delete().catch(e=>{console.log(e.message)});
             return await verifyDate(collected.first(), msg, infoMsg, 1).catch(e => {throw(e)});
           }).catch(async (e)=>{
@@ -200,7 +202,7 @@ client.on("message", async(msg) => {
   }
       
   /////////////////////////////////!rb compare//////////////////////////////////////
-  if (msg.content.toLowerCase() === "!rb compare") {
+  if (msg.channel.id === process.env.REAWOKEN_COMMANDS_CHANNEL && msg.content.toLowerCase() === "!rb compare") {
     const authorized = await isMemberAuthroized(msg.member).catch(e=>{
         error = "isMemberAuth: " + e.message;
     });
@@ -365,7 +367,7 @@ async function verifyDate(message, msg, infoMsg, attempt)
           console.log(e.message);
         });
         attempt++;
-        dateString = await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max:1, time:25000, errors:['time']}).then(async (collected) => {
+        dateString = await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max:1, time:45000, errors:['time']}).then(async (collected) => {
           await infoMsg.delete().catch(e=>{console.log(e.message)});
           return await verifyDate(collected.first(), msg, infoMsg, attempt).catch(e=> {throw(e)});
         }).catch(async (e)=>{
@@ -387,7 +389,7 @@ async function verifyDate(message, msg, infoMsg, attempt)
         console.log(e.message);
       });
       attempt++;
-      dateString = await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max:1, time:25000, errors:['time']}).then(async (collected) => {
+      dateString = await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max:1, time:45000, errors:['time']}).then(async (collected) => {
         await infoMsg.delete().catch(e=>{console.log(e.message)});
         return await verifyDate(collected.first(), msg, infoMsg, attempt).catch(e => {throw(e)});
       }).catch(async (e)=>{
