@@ -24,7 +24,7 @@ client.on("message", async(msg) => {
   if(msg.channel.id === process.env.REGISTER_HERE_CHANNEL && msg.content.includes("Successfully synced")){
     let user = msg.content.split(":")[0];
    
-  var gRole = await msg.guild.members.cache.find((member) => member.displayName == user).catch(e=>{console.log(e.message)});
+    const gRole = await msg.guild.members.cache.filter(m => m.displayName === user).catch(e=>{console.log(e.message)});
     
     console.log("Member: " + user + " has been synced");
     console.log(gRole);
