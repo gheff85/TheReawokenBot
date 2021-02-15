@@ -23,7 +23,11 @@ client.on("message", async(msg) => {
   /////////////////////////////assign role on register////////
   if(msg.channel.id === process.env.REGISTER_HERE_CHANNEL && msg.content.includes("Successfully synced")){
     let user = msg.content.split(":")[0];
+   
+  var gRole = msg.guild.members.find((member) => member.displayName == user);
+    
     console.log("Member: " + user + " has been synced");
+    console.log(gRole);
     };
     
     
