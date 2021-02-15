@@ -22,9 +22,6 @@ client.on("message", async(msg) => {
    
     const registeredRole = msg.guild.roles.cache.find(r => r.name === "Registered");
     const guildMember = await msg.guild.members.cache.find(m => m.displayName === user).roles.add(registeredRole);
-    
-    console.log("Member: " + user + " has been synced");
-    console.log(guildMember);
     };
    
   
