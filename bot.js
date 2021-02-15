@@ -23,7 +23,7 @@ client.on("message", async(msg) => {
   /////////////////////////////assign role on register////////
   if(msg.channel.id == process.env.REGISTER_HERE_CHANNEL && msg.content.toLowerCase().includes("Successfully synced")){
     console.log("Member has been synced");
-    });
+    };
     
     
   /////////////////////////////!rb cc/////////////////////////
