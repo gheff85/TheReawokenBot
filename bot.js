@@ -312,7 +312,7 @@ async function getNotRegistered(registeredMembers, AllMemberIDs){
   var differences = AllMembers.filter(x => !regDisplayName.includes(x));
   
   for(var member of differences){
-    results += member.DisplayName + '\n';
+    results += member + '\n';
   }
   
   return results;
