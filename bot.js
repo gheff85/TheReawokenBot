@@ -74,6 +74,7 @@ client.on("message", async(msg) => {
               });
             
               if(!error){
+                
                 removeFromAwaitingResponse(msg.author.id);
                 await infoMsg.delete().catch(e=>{console.log(e.message)});
                 await msg.reply("Channel clean-up completed").catch(e=>{
@@ -206,6 +207,7 @@ client.on("message", async(msg) => {
 
     let notInClan = [];
     let notInDiscord = [];
+    let notRegistered = [];
 
     if(!error){
       awaitingResponse.push(msg.author.id);
@@ -214,37 +216,49 @@ client.on("message", async(msg) => {
       });
 
       if(!error){
-        //const MemberIDs = await getAllMembersFromRole(msg.guild.members, Role).catch(e=>{
-        //   error = "getAllMemebrsFromRole: " + e.message;
-        //});
-        
-        const MemberIDs = await getAllDiscordMembers(msg.guild.members).catch(e=>{
-            error = "getAllMemebrsFromRole: " + e.message;
+        const registeredMemberIDs = await getAllMembersFromRole(msg.guild.members, Role).catch(e=>{
+           error = "getAllMemebrsFromRole: " + e.message;
         });
-
+        
         if(!error){
-          const clanMembers = await getClanMembers().catch(e=>{
-            error = "getAllMemebrsFromRole: " + e.message;
+          const MemberIDs = await getAllDiscordMembers(msg.guild.members).catch(e=>{
+              error = "getAllMemebrsFromRole: " + e.message;
           });
 
           if(!error){
-            
-            notInClan = await getNotInClan(clanMembers, MemberIDs).catch(e=>{
-              error = "Error finding members not in Clan";
-            })
+            const clanMembers = await getClanMembers().catch(e=>{
+              error = "getAllMemebrsFromRole: " + e.message;
+            });
 
             if(!error){
-              notInDiscord = await getNotInDiscord(clanMembers, MemberIDs).catch(e=>{
-                error = "Error finding members not in Discord";
-              })
 
-              
-              removeFromAwaitingResponse(msg.author.id);
-              await msg.reply("The following members are in Discord but not the clan:\n`"+ notInClan.join('\n') +"`")
-              .catch((e) => Promise.reject({message: e.message}));
+              notInClan = await getNotInClan(clanMembers, MemberIDs).catch(e=>{
+                error = "Error finding members not in Clan";
+              });
 
-              await msg.reply("The following members are in the Clan but not registered in Discord:\n`"+ getNotInDiscordText(notInDiscord) +"`")
-              .catch((e) => Promise.reject({message: e.message}));
+              if(!error){
+                notInDiscord = await getNotInDiscord(clanMembers, MemberIDs).catch(e=>{
+                  error = "Error finding members not in Discord";
+                });
+
+                if(!error) {
+                  notRegistered = await getNotRegistered().catch(e=>{
+                    error = "Error finding not registered";
+                  });
+                  
+                  if(!error) {
+                    removeFromAwaitingResponse(msg.author.id);
+                    await msg.reply("The following members are in Discord but not the clan:\n`"+ notInClan.join('\n') +"`")
+                    .catch((e) => Promise.reject({message: e.message}));
+
+                    await msg.reply("The following members are in the Clan but not in Discord:\n`"+ getNotInDiscordText(notInDiscord) +"`")
+                    .catch((e) => Promise.reject({message: e.message}));
+                    
+                    await msg.reply("The following members are not registered in Discord:\n`"+ notRegistered +"`")
+                    .catch((e) => Promise.reject({message: e.message}));
+                  }
+                }
+              }
             }
           }
         }
@@ -279,6 +293,18 @@ async function getNotInClan(clanMembers, MemberIDs){
     }
   }
 
+  return results;
+}
+
+async function getNotRegistered(registeredMembers, AllMemberIDs){
+  var AllMembersCopy = AllMemberIDs.map(x=>x);
+  var results = '';
+  AllMembersCopy.removeAll(registeredMembers);
+  
+  for(var member of AllMembersCopy){
+    results += member.displayName + '\n';
+  }
+  
   return results;
 }
 
