@@ -298,8 +298,10 @@ async function getNotInClan(clanMembers, MemberIDs){
 
 async function getNotRegistered(registeredMembers, AllMemberIDs){
   var AllMembersCopy = AllMemberIDs.map(x=>x);
+  console.log("Array Copied");
   var results = '';
   AllMembersCopy.removeAll(registeredMembers);
+  console.log("Members removed")
   
   for(var member of AllMembersCopy){
     results += member.displayName + '\n';
