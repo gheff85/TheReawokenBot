@@ -76,7 +76,7 @@ client.on("message", async(msg) => {
               if(!error){
                 removeFromAwaitingResponse(msg.author.id);
                 await infoMsg.delete().catch(e=>{console.log(e.message)});
-                await msg.reply("Deleted " + count + " Messages").catch(e=>{
+                await msg.reply("Channel clean-up completed").catch(e=>{
                   console.log(e.message);
                 });
               }
@@ -214,7 +214,11 @@ client.on("message", async(msg) => {
       });
 
       if(!error){
-        const MemberIDs = await getAllMembersFromRole(msg.guild.members, Role).catch(e=>{
+        //const MemberIDs = await getAllMembersFromRole(msg.guild.members, Role).catch(e=>{
+        //   error = "getAllMemebrsFromRole: " + e.message;
+        //});
+        
+        const MemberIDs = await getAllDiscordMembers(msg.guild.members).catch(e=>{
             error = "getAllMemebrsFromRole: " + e.message;
         });
 
@@ -511,6 +515,11 @@ async function getLastMessageFromEveryMember(guildMembers, MemberIDs, channelMes
 async function getAllMembersFromRole(members, role){
 
   return await members.cache.filter(m => m.roles.cache.find(r => r == role)).filter(u => u.user.bot === false)
+                                                      .map(m => {return {user_id: m.user.id, user_tag: m.user.tag, DisplayName: m.displayName, JoinedDate: m.joinedAt}});
+}
+
+async function getAllDiscordMembers(members){
+  return await members.cache.filter(u => u.user.bot === false)
                                                       .map(m => {return {user_id: m.user.id, user_tag: m.user.tag, DisplayName: m.displayName, JoinedDate: m.joinedAt}});
 }
 
