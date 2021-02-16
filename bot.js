@@ -242,7 +242,7 @@ client.on("message", async(msg) => {
                 });
 
                 if(!error) {
-                  notRegistered = await getNotRegistered().catch(e=>{
+                  notRegistered = await getNotRegistered(registeredMemberIDs, MemberIDs).catch(e=>{
                     error = "Error finding not registered";
                   });
                   
