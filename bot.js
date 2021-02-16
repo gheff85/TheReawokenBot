@@ -297,9 +297,19 @@ async function getNotInClan(clanMembers, MemberIDs){
 }
 
 async function getNotRegistered(registeredMembers, AllMemberIDs){
-  var AllMembersCopy = AllMemberIDs.map(x=>x);
+  var regDisplayName = [];
+  var AllMembers = [];
+  
+  for(var member of registeredMembers) {
+    regDisplayName.push(member.DisplayName);
+  }
+  
+  for(var member of AllMemberIDs) {
+    AllMembers.push(member.DisplayName);
+  }
+  
   var results = '';
-  var differences = AllMemberIDs.filter(x => !registeredMembers.includes(x));
+  var differences = AllMembers.filter(x => !regDisplayName.includes(x));
   
   for(var member of differences){
     results += member.DisplayName + '\n';
