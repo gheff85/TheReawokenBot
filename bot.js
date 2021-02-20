@@ -1,6 +1,10 @@
 const Discord = require("discord.js");
 const axios = require('axios').default;
 var moment = require("moment");
+const random = require('random');
+const {MongoClient} = require('mongodb');
+
+require('dotenv').config()
 const client = new Discord.Client({ ws: { intents: new Discord.Intents(Discord.Intents.ALL) }});
   
 client.on("ready", () => {
@@ -9,7 +13,9 @@ client.on("ready", () => {
 var awaitingResponse = [];
 client.on("message", async(msg) => {
   var error;
-  
+
+  await generateExperience(msg);
+
   if(awaitingResponse.includes(msg.author.id))
   {
     return;
@@ -276,6 +282,92 @@ client.on("message", async(msg) => {
   }
 });
 
+async function getUserStats(id){
+  const client = new MongoClient(process.env.MONGODB_URI, {useUnifiedTopology: true});
+  await client.connect().catch(e=>{
+    console.log(e.message);
+    return "Cannot connect to db";
+  });
+  const result = await client.db('clan_info').collection('levels').findOne({ user_id: id });
+  await client.close().catch(e=> {console.log(e.message)});
+  return result;
+}
+
+async function saveUserStats(userStats){
+  const client = new MongoClient(process.env.MONGODB_URI, {useUnifiedTopology: true});
+  await client.connect().catch(e=>{
+    console.log(e.message);
+    return "Cannot connect to db";
+  });
+
+  const query = { user_id: userStats.user_id };
+  const update = { $set: { user_id: userStats.user_id,
+                           avatar: userStats.avatar,
+                           nickname: userStats.nickname,
+                           current_xp: userStats.current_xp,
+                           xpOfNextLevel: userStats.xpOfNextLevel,
+                           level: userStats.level,
+                           last_msg: userStats.last_msg}};
+  const options = { upsert: true };
+  const result = await client.db('clan_info').collection('levels').updateOne(query, update, options).catch(e=>{
+    console.log(e.message);
+    return "User stats not saved";
+  });
+
+  await client.close().catch(e=> {console.log(e.message)});
+  return result;
+}
+
+async function generateExperience(msg){
+
+  if(msg.author.bot){
+    return;
+  }
+
+  let userStats = await getUserStats(msg.author.id).catch(e => {
+    console.log(e.message);
+  });
+
+
+  if(userStats && userStats.toString().includes("Cannot connect to db")){
+    return;
+  }
+
+ if(!userStats){
+    userStats = {
+      user_id: msg.author.id,
+      avatar: msg.author.avatarURL({dynamic: false, format:"png"}),
+      nickname: await msg.guild.members.cache.find(u => u.id === msg.author.id).displayName,
+      current_xp:0,
+      xpOfNextLevel:100,
+      level:0,
+      last_msg:0
+    };
+  }
+
+  if((Date.now() - userStats.last_msg) < 10*1000 ) {
+    return;
+  }
+
+  userStats.last_msg = Date.now();
+  userStats.current_xp += random.int(10, 20);
+
+
+  if (userStats.current_xp >= userStats.xpOfNextLevel) {
+      userStats.level++;
+      userStats.current_xp = userStats.current_xp - userStats.xpOfNextLevel;
+      userStats.xpOfNextLevel = 2 * Math.pow((userStats.level + 1), 2) + 20 * (userStats.level + 1) + 50;
+
+      await saveUserStats(userStats);
+
+      const levelChannel = await msg.guild.channels.cache.get(process.env.MEMBER_LEVEL_RANK_UP_CHANNEL);
+      await levelChannel.send(userStats.nickname + " has reached lvl: " + userStats.level);
+  }
+  else{
+    await saveUserStats(userStats);
+  }
+}
+
 function getNotInDiscordText(notInDiscord){
     var text = '';
     for(member of notInDiscord){
@@ -354,7 +446,7 @@ async function getClanMembers(){
 
 async function getUserHolidays(msg){
   var result = [];
-  const holidayChannelId = process.env.MEMBERS_HOLIDAYS
+  const holidayChannelId = process.env.MEMBERS_HOLIDAYS_CHANNEL
   const holChannel = await addChannelToArray(msg.client.channels,
     [holidayChannelId]).catch(e=>{
       error = "addChannelToArray: " + e.message;
@@ -599,7 +691,7 @@ async function getLastUserMessage(guildMembers, channelMessages, userID)
       result = {Username: first.author.tag, DisplayName: displayName, UserID: userID, Date:new Date(first.createdTimestamp), JoinedDate: member.joinedAt };
     }
     else{
-      result = {Username: userName, DisplayName: displayName,  UserID: userID, Date: new Date(2020, 01), JoinedDate: member.joinedAt};
+      result = {Username: userName, DisplayName: displayName,  UserID: userID, Date: new Date(2020, 1), JoinedDate: member.joinedAt};
     }
 
     return result;
