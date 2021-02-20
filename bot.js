@@ -1,7 +1,6 @@
 const Discord = require("discord.js");
 const axios = require('axios').default;
 var moment = require("moment");
-const random = require('random');
 const {MongoClient} = require('mongodb');
 
 require('dotenv').config()
@@ -350,7 +349,7 @@ async function generateExperience(msg){
   }
 
   userStats.last_msg = Date.now();
-  userStats.current_xp += random.int(10, 20);
+  userStats.current_xp += 5;
 
 
   if (userStats.current_xp >= userStats.xpOfNextLevel) {

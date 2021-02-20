@@ -12,7 +12,6 @@
     "dotenv": "^8.2.0",
     "moment": "^2.29.1",
     "mongodb": "^3.6.4",
-    "random": "^2.2.0",
     "request": "2.81.0"
   },
   "engines": {
