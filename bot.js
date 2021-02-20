@@ -13,7 +13,10 @@ var awaitingResponse = [];
 client.on("message", async(msg) => {
   var error;
 
-  await generateExperience(msg);
+  if(msg.channel.id === process.env.CHAT_CHANNEL || msg.channel.id === process.env.PVE_CHANNEL ||
+     msg.channel.id === process.env.PVP_CHANNEL || msg.channel.id === process.env.RAIDS_CHANNEL) {
+    await generateExperience(msg);
+  }
 
   if(awaitingResponse.includes(msg.author.id))
   {
@@ -349,13 +352,13 @@ async function generateExperience(msg){
   }
 
   userStats.last_msg = Date.now();
-  userStats.current_xp += 5;
+  userStats.current_xp += 25;
 
 
   if (userStats.current_xp >= userStats.xpOfNextLevel) {
       userStats.level++;
       userStats.current_xp = userStats.current_xp - userStats.xpOfNextLevel;
-      userStats.xpOfNextLevel = 2 * Math.pow((userStats.level + 1), 2) + 20 * (userStats.level + 1) + 50;
+      userStats.xpOfNextLevel = Math.pow((userStats.level + 1), 2) + 20 * (userStats.level + 1) + 100;
 
       await saveUserStats(userStats);
 
