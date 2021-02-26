@@ -378,7 +378,7 @@ async function generateExperience(msg){
       current_xp:0,
       xpOfNextLevel:100,
       level:0,
-      rank:"one",
+      rank:"",
       newRankAchieved: false,
       last_msg:0
     };
