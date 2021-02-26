@@ -390,31 +390,31 @@ async function generateExperience(msg){
   if (userStats.current_xp >= userStats.xpOfNextLevel) {
       userStats.level++;
       switch(userStats.level){
-        case 5:
+        case 1:
           userStats.rank = "Shank";
           userStats.newRankAchieved = true;
           break;
-        case 10:
+        case 5:
           userStats.rank = "Dreg";
           userStats.newRankAchieved = true;
           break;
-        case 15:
+        case 10:
           userStats.rank = "Vandal";
           userStats.newRankAchieved = true;
           break;
-        case 20:
+        case 15:
           userStats.rank = "Captain";
           userStats.newRankAchieved = true;
           break;
-        case 25:
+        case 20:
           userStats.rank = "Servitor";
           userStats.newRankAchieved = true;
           break;
-          case 30:
+          case 25:
           userStats.rank = "Archon";
           userStats.newRankAchieved = true;
           break;
-          case 35:
+          case 30:
           userStats.rank = "Kell";
           userStats.newRankAchieved = true;
           break;
@@ -430,6 +430,9 @@ async function generateExperience(msg){
         userStats.avatar = './discord-logo.png';
       }
       userStats.current_xp = userStats.current_xp - userStats.xpOfNextLevel;
+      if(userStats.current_xp < 10){
+        userStats.current_xp = 10;
+      }
       userStats.xpOfNextLevel = Math.pow((userStats.level + 1), 2) + 20 * (userStats.level + 1) + 100;
       userStats.nickname = await msg.guild.members.cache.find(u => u.id === msg.author.id).displayName,
 
