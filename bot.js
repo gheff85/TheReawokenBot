@@ -25,7 +25,11 @@ client.on("message", async(msg) => {
       console.log(e.message);
     });
 
-    await generateRankCard(msg.channel, userStats, null);
+    if(userStats && (userStats.level > 0)) {
+      await generateRankCard(msg.channel, userStats, null).catch(e=> {console.log(e.message)});
+    } else {
+      await msg.channel.send("<@" + msg.author.id + "> You have not had enough Discord participation to be able to generate a rankcard")
+    }
   }
 
   if(msg.channel.id === process.env.CHAT_CHANNEL || msg.channel.id === process.env.PVE_CHANNEL ||
