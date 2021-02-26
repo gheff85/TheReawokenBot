@@ -3,7 +3,6 @@ const axios = require('axios').default;
 var moment = require("moment");
 const {MongoClient} = require('mongodb');
 const Canvas = require('canvas');
-const path = require('path');
 const { MessageAttachment } = require('discord.js');
 
 require('dotenv').config()
@@ -30,7 +29,7 @@ client.on("message", async(msg) => {
   }
 
   if(msg.channel.id === process.env.CHAT_CHANNEL || msg.channel.id === process.env.PVE_CHANNEL ||
-     msg.channel.id === process.env.PVP_CHANNEL || msg.channel.id === process.env.RAIDS_CHANNEL && msg.content.toLowerCase() !== "!rb rank") {
+     msg.channel.id === process.env.PVP_CHANNEL || msg.channel.id === process.env.RAIDS_CHANNEL && msg.content.toLowerCase() !== "!rb rankcard") {
     await generateExperience(msg);
   }
 
