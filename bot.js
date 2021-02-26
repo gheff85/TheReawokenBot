@@ -448,7 +448,7 @@ async function generateExperience(msg){
       let channelMessage = "Congratulations, <@" + userStats.user_id + "> you have reached level: " + userStats.level
 
       if(userStats.newRankAchieved) {
-        channelMessage = channelMessage + " and reached rank: " + userStats.rank;
+        channelMessage = channelMessage + " and achieved the rank of: " + userStats.rank;
       }
 
       const levelChannel = await msg.guild.channels.cache.get(process.env.MEMBER_LEVEL_RANK_UP_CHANNEL);
