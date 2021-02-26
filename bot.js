@@ -13,7 +13,7 @@ client.on("ready", () => {
 });
 
 client.on("guildMemberRemove", async (member) =>{
-  await deleteUserStats(member);
+  await deleteUserStats(member).console(e=> {console.log(e.message)});
 })
 
 var awaitingResponse = [];
@@ -29,12 +29,13 @@ client.on("message", async(msg) => {
       await generateRankCard(msg.channel, userStats, null).catch(e=> {console.log(e.message)});
     } else {
       await msg.channel.send("<@" + msg.author.id + "> You have not had enough Discord participation to be able to generate a rankcard")
+          .catch(e=>{console.log(e.message)});
     }
   }
 
   if(msg.channel.id === process.env.CHAT_CHANNEL || msg.channel.id === process.env.PVE_CHANNEL ||
      msg.channel.id === process.env.PVP_CHANNEL || msg.channel.id === process.env.RAIDS_CHANNEL && msg.content.toLowerCase() !== "!rb rankcard") {
-    await generateExperience(msg);
+    await generateExperience(msg).catch(e=> {console.log(e.message)});
   }
 
   if(awaitingResponse.includes(msg.author.id))
@@ -47,7 +48,8 @@ client.on("message", async(msg) => {
   if(msg.channel.id === process.env.REGISTER_HERE_CHANNEL && msg.content.includes("!register")){
 
     const registeredRole = msg.guild.roles.cache.find(r => r.name === "Registered");
-    await msg.guild.members.cache.find(m => m.id === msg.author.id).roles.add(registeredRole);
+    await msg.guild.members.cache.find(m => m.id === msg.author.id).roles.add(registeredRole)
+        .catch(e=>{console.log(e.message)});
     }
    
   
@@ -183,7 +185,8 @@ client.on("message", async(msg) => {
     });
     
     if(!error){
-      startDate = await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max:1, time:45000, errors: ['time']}).then(async (collected) => {
+      startDate = await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max:1, time:45000, errors: ['time']})
+          .then(async (collected) => {
         await infoMsg.delete().catch(e=>{console.log(e.message)});
         return await verifyDate(collected.first(), msg, infoMsg, 1).catch(e => {throw(e)});
       }).catch(async (e) => {
@@ -308,7 +311,7 @@ async function getUserStats(id){
     console.log(e.message);
     return "Cannot connect to db";
   });
-  const result = await client.db('clan_info').collection('levels').findOne({ user_id: id });
+  const result = await client.db('clan_info').collection('levels').findOne({ user_id: id }).catch(e=>{console.log(e.message)});
   await client.close().catch(e=> {console.log(e.message)});
   return result;
 }
@@ -440,19 +443,19 @@ async function generateExperience(msg){
       userStats.xpOfNextLevel = Math.pow((userStats.level + 1), 2) + 20 * (userStats.level + 1) + 100;
       userStats.nickname = await msg.guild.members.cache.find(u => u.id === msg.author.id).displayName,
 
-      await saveUserStats(userStats);
+      await saveUserStats(userStats).catch(e=>{console.log(e.message)});
       let channelMessage = "Congratulations, <@" + userStats.user_id + "> you have reached level: #" + userStats.level
 
       if(userStats.newRankAchieved) {
         channelMessage = channelMessage + " and reached rank: " + userStats.rank;
       }
 
-      const levelChannel = await msg.guild.channels.cache.get(process.env.MEMBER_LEVEL_RANK_UP_CHANNEL);
-      generateRankCard(levelChannel, userStats, channelMessage);
+      const levelChannel = await msg.guild.channels.cache.get(process.env.MEMBER_LEVEL_RANK_UP_CHANNEL).catch(e=>{console.log(e.message)});
+      await generateRankCard(levelChannel, userStats, channelMessage).catch(e=>{console.log(e.message)});
   } else{
     userStats.avatar = msg.author.avatarURL({dynamic: false, format:"png"})
     userStats.nickname = await msg.guild.members.cache.find(u => u.id === msg.author.id).displayName;
-    await saveUserStats(userStats);
+    await saveUserStats(userStats).catch(e=>{console.log(e.message)});
   }
 }
 
@@ -643,8 +646,8 @@ async function getMessageAndDateArray(channelMessages){
 
 async function deleteMessages(messageList, infoMsg, msg){
   let count =0;
-  await infoMsg.delete();
-  infoMsg = msg.reply("Deleting " + (messageList.length) + " Messages...");
+  await infoMsg.delete().catch(e=>{console.log(e.message)});
+  await msg.reply("Deleting " + (messageList.length) + " Messages...").catch(e=>{console.log(e.message)});
   for(var message of messageList)
   {
     await message.delete({timeout: 1500}).then(() => {count = count + 1; console.log("Message Deleted");}).catch((e) => Promise.reject({message: e.message}));
@@ -727,12 +730,12 @@ async function getLastMessageFromEveryMember(guildMembers, MemberIDs, channelMes
 
 async function getAllMembersFromRole(members, role){
 
-  return await members.cache.filter(m => m.roles.cache.find(r => r == role)).filter(u => u.user.bot === false)
+  return members.cache.filter(m => m.roles.cache.find(r => r == role)).filter(u => u.user.bot === false)
                                                       .map(m => {return {user_id: m.user.id, user_tag: m.user.tag, DisplayName: m.displayName, JoinedDate: m.joinedAt}});
 }
 
 async function getAllDiscordMembers(members){
-  return await members.cache.filter(u => u.user.bot === false)
+  return members.cache.filter(u => u.user.bot === false)
                                                       .map(m => {return {user_id: m.user.id, user_tag: m.user.tag, DisplayName: m.displayName, JoinedDate: m.joinedAt}});
 }
 
@@ -747,7 +750,7 @@ async function addChannelToArray(channels, channelArray){
 }
 
 async function getRole(guild, roleName){
-   return await guild.roles.cache.find(r=>r.name == roleName);
+   return guild.roles.cache.find(r=>r.name == roleName);
 }
 
 async function kickInactive(initalMessage, inactiveMembers){
