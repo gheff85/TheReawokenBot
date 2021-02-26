@@ -2,6 +2,8 @@ const Discord = require("discord.js");
 const axios = require('axios').default;
 var moment = require("moment");
 const {MongoClient} = require('mongodb');
+const Canvas = require('canvas');
+const { MessageAttachment } = require('discord.js');
 
 require('dotenv').config()
 const client = new Discord.Client({ ws: { intents: new Discord.Intents(Discord.Intents.ALL) }});
@@ -9,12 +11,25 @@ const client = new Discord.Client({ ws: { intents: new Discord.Intents(Discord.I
 client.on("ready", () => {
   console.log(`Logged in as ${client.user.tag}!`)
 });
+
+client.on("guildMemberRemove", async (member) =>{
+  await deleteUserStats(member);
+})
+
 var awaitingResponse = [];
 client.on("message", async(msg) => {
   var error;
 
+  if(msg.content.toLowerCase() === "!rb rankcard"){
+    let userStats = await getUserStats(msg.author.id).catch(e => {
+      console.log(e.message);
+    });
+
+    await generateRankCard(msg.channel, userStats, null);
+  }
+
   if(msg.channel.id === process.env.CHAT_CHANNEL || msg.channel.id === process.env.PVE_CHANNEL ||
-     msg.channel.id === process.env.PVP_CHANNEL || msg.channel.id === process.env.RAIDS_CHANNEL) {
+     msg.channel.id === process.env.PVP_CHANNEL || msg.channel.id === process.env.RAIDS_CHANNEL && msg.content.toLowerCase() !== "!rb rankcard") {
     await generateExperience(msg);
   }
 
@@ -25,12 +40,11 @@ client.on("message", async(msg) => {
 
  
   /////////////////////////////assign role on register////////
-  if(msg.channel.id === process.env.REGISTER_HERE_CHANNEL && msg.content.includes("Successfully synced")){
-    let user = msg.content.split(":")[0];
-   
+  if(msg.channel.id === process.env.REGISTER_HERE_CHANNEL && msg.content.includes("!register")){
+
     const registeredRole = msg.guild.roles.cache.find(r => r.name === "Registered");
-    const guildMember = await msg.guild.members.cache.find(m => m.displayName === user).roles.add(registeredRole);
-    };
+    await msg.guild.members.cache.find(m => m.id === msg.author.id).roles.add(registeredRole);
+    }
    
   
   ////////Stop bot from replying to bots from this point on//////////
@@ -38,7 +52,7 @@ client.on("message", async(msg) => {
   {
     return;
   }
-    
+
   /////////////////////////////!rb cc/////////////////////////
   if(msg.channel.id === process.env.REAWOKEN_COMMANDS_CHANNEL && msg.content.toLowerCase() === "!rb cc"){
     const authorized = await isMemberAuthroized(msg.member).catch(e=>{
@@ -309,6 +323,8 @@ async function saveUserStats(userStats){
                            current_xp: userStats.current_xp,
                            xpOfNextLevel: userStats.xpOfNextLevel,
                            level: userStats.level,
+                           rank: userStats.rank,
+                           newRankAchieved: userStats.newRankAchieved,
                            last_msg: userStats.last_msg}};
   const options = { upsert: true };
   const result = await client.db('clan_info').collection('levels').updateOne(query, update, options).catch(e=>{
@@ -318,6 +334,21 @@ async function saveUserStats(userStats){
 
   await client.close().catch(e=> {console.log(e.message)});
   return result;
+}
+
+async function deleteUserStats(member){
+  const client = new MongoClient(process.env.MONGODB_URI, {useUnifiedTopology: true});
+  await client.connect().catch(e=>{
+    console.log(e.message);
+    return "Cannot connect to db";
+  });
+
+  await client.db('clan_info').collection('levels').deleteOne( { "user_id" : member.id } ).catch(e=>{
+    console.log(e.message);
+    return "User stats not saved";
+  });
+
+  await client.close().catch(e=> {console.log(e.message)});
 }
 
 async function generateExperience(msg){
@@ -338,11 +369,13 @@ async function generateExperience(msg){
  if(!userStats){
     userStats = {
       user_id: msg.author.id,
-      avatar: msg.author.avatarURL({dynamic: false, format:"png"}),
-      nickname: await msg.guild.members.cache.find(u => u.id === msg.author.id).displayName,
+      avatar: "",
+      nickname: "",
       current_xp:0,
       xpOfNextLevel:100,
       level:0,
+      rank:"one",
+      newRankAchieved: false,
       last_msg:0
     };
   }
@@ -354,18 +387,65 @@ async function generateExperience(msg){
   userStats.last_msg = Date.now();
   userStats.current_xp += 25;
 
-
   if (userStats.current_xp >= userStats.xpOfNextLevel) {
       userStats.level++;
+      switch(userStats.level){
+        case 5:
+          userStats.rank = "Shank";
+          userStats.newRankAchieved = true;
+          break;
+        case 10:
+          userStats.rank = "Dreg";
+          userStats.newRankAchieved = true;
+          break;
+        case 15:
+          userStats.rank = "Vandal";
+          userStats.newRankAchieved = true;
+          break;
+        case 20:
+          userStats.rank = "Captain";
+          userStats.newRankAchieved = true;
+          break;
+        case 25:
+          userStats.rank = "Servitor";
+          userStats.newRankAchieved = true;
+          break;
+          case 30:
+          userStats.rank = "Archon";
+          userStats.newRankAchieved = true;
+          break;
+          case 35:
+          userStats.rank = "Kell";
+          userStats.newRankAchieved = true;
+          break;
+        default:
+          userStats.newRankAchieved = false;
+          break;
+      }
+      let avatar = msg.author.avatarURL({dynamic: false, format:"png"})
+      if(avatar){
+        userStats.avatar = avatar;
+      }
+      else {
+        userStats.avatar = './discord-logo.png';
+      }
       userStats.current_xp = userStats.current_xp - userStats.xpOfNextLevel;
       userStats.xpOfNextLevel = Math.pow((userStats.level + 1), 2) + 20 * (userStats.level + 1) + 100;
+      userStats.nickname = await msg.guild.members.cache.find(u => u.id === msg.author.id).displayName,
 
       await saveUserStats(userStats);
+      let channelMessage = "Congratulations, <@" + userStats.user_id + "> you have reached level: #" + userStats.level
 
+      if(userStats.newRankAchieved) {
+        channelMessage = channelMessage + " and reached rank: " + userStats.rank;
+      }
+
+      generateRankCard(msg.channel, userStats, channelMessage);
       const levelChannel = await msg.guild.channels.cache.get(process.env.MEMBER_LEVEL_RANK_UP_CHANNEL);
       await levelChannel.send(userStats.nickname + " has reached lvl: " + userStats.level);
-  }
-  else{
+  } else{
+    userStats.avatar = msg.author.avatarURL({dynamic: false, format:"png"})
+    userStats.nickname = await msg.guild.members.cache.find(u => u.id === msg.author.id).displayName;
     await saveUserStats(userStats);
   }
 }
@@ -373,7 +453,7 @@ async function generateExperience(msg){
 function getNotInDiscordText(notInDiscord){
     var text = '';
     for(member of notInDiscord){
-      text += '{' + member.displayName + ', ' + member.lastSeenDisplayName + '}\n'; 
+      text += '{' + member.displayName + ', ' + member.lastSeenDisplayName + '}\n';
     }
     return text;
 }
@@ -393,22 +473,22 @@ async function getNotInClan(clanMembers, MemberIDs){
 async function getNotRegistered(registeredMembers, AllMemberIDs){
   var regDisplayName = [];
   var AllMembers = [];
-  
+
   for(var member of registeredMembers) {
     regDisplayName.push(member.DisplayName);
   }
-  
+
   for(var member of AllMemberIDs) {
     AllMembers.push(member.DisplayName);
   }
-  
+
   var results = '';
   var differences = AllMembers.filter(x => !regDisplayName.includes(x));
-  
+
   for(var member of differences){
     results += member + '\n';
   }
-  
+
   return results;
 }
 
@@ -431,9 +511,9 @@ async function getClanMembers(){
       'X-API-Key': apiKey,
     }
   }
-  
+
   let resp = await axios.get(process.env.GET_MEMBERS_ENDPOINT, config).then(r => {
-  let memberList = [];  
+  let memberList = [];
   var memberResults =r.data.Response.results;
     for(var member of memberResults){
       memberList.push({lastSeenDisplayName: member.destinyUserInfo.LastSeenDisplayName, displayName: member.destinyUserInfo.displayName})
@@ -481,10 +561,9 @@ function removeFromAwaitingResponse(userID){
   awaitingResponse.splice(index,1);
 }
 
-async function verifyDate(message, msg, infoMsg, attempt)
-{
+async function verifyDate(message, msg, infoMsg, attempt){
   var dateString = message.content;
-    
+
     if(isInputFormatValid(dateString) && moment(dateString, "MM/DD/YYYY").isValid()){
       if(!moment(dateString, "MM/DD/YYYY").isBefore(moment())){
         await message.delete().catch(e=>{console.log(e.message)});
@@ -537,7 +616,7 @@ async function verifyDate(message, msg, infoMsg, attempt)
 }
 
 function isInputFormatValid(input){
-  
+
   var pattern = /^\d{2}\/\d{2}\/\d{4}$/;
 
   if(!pattern.test(input)){
@@ -568,8 +647,7 @@ async function deleteMessages(messageList, infoMsg, msg){
   return count;
 }
 
-async function isMemberAuthroized(member)
-{
+async function isMemberAuthroized(member){
   if(await member.roles.cache.find(r => r.name === "Admin") || await member.roles.cache.find(r => r.name === "Admin-Top-Tier")){
     return true;
   }
@@ -581,10 +659,10 @@ async function isMemberAuthroized(member)
 async function getMessagesBeforeDate(messagesList, numberOfDays, memberData){
   let filteredMgs = [];
   var cutoffDate = new Date();
-  var newMemberLeeway = new Date();					   
+  var newMemberLeeway = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - numberOfDays);
-  newMemberLeeway.setDate(newMemberLeeway.getDate() - 7);													 
-  
+  newMemberLeeway.setDate(newMemberLeeway.getDate() - 7);
+
   if(memberData){
 
   filteredMgs = messagesList.filter(m => m.Date.getTime() < cutoffDate.getTime() ).filter(m => m.JoinedDate.getTime() < newMemberLeeway.getTime() );
@@ -597,7 +675,7 @@ async function getMessagesBeforeDate(messagesList, numberOfDays, memberData){
 }
 
 async function getInactiveIDsAndSendInactiveUsersReply(msg, userRecentMsgs){
-  
+
   let inactiveUsersMsg = [];
   let filteredUsers = [];
   const MembersOnHoliday = await getUserHolidays(msg).catch(e=>{
@@ -610,7 +688,7 @@ async function getInactiveIDsAndSendInactiveUsersReply(msg, userRecentMsgs){
 
   inactiveUsersMsg = filteredUsers.map(elm => {
     var lastActivity;
-    if(elm.Date.getTime() === new Date(2020, 01).getTime()){
+    if(elm.Date.getTime() === new Date(2020, 1).getTime()){
       lastActivity = "No Activity Recorded"
     }
     else{
@@ -626,11 +704,10 @@ async function getInactiveIDsAndSendInactiveUsersReply(msg, userRecentMsgs){
  else{
    return Promise.reject({message: "No Inactive Members Found"});
  }
-  
+
 }
 
-async function getLastMessageFromEveryMember(guildMembers, MemberIDs, channelMessages)
-{
+async function getLastMessageFromEveryMember(guildMembers, MemberIDs, channelMessages){
   let results=[];
 
   for(var memberID of MemberIDs)
@@ -659,7 +736,7 @@ async function addChannelToArray(channels, channelArray){
   for(var channel of channelArray){
     results.push(await channels.cache.get(channel));
   }
-  
+
   return results;
 }
 
@@ -667,8 +744,7 @@ async function getRole(guild, roleName){
    return await guild.roles.cache.find(r=>r.name == roleName);
 }
 
-async function kickInactive(initalMessage, inactiveMembers)
-{
+async function kickInactive(initalMessage, inactiveMembers){
    for(var member of inactiveMembers)
    {
       await initalMessage.guild.members.cache.get(member).kick()
@@ -676,8 +752,7 @@ async function kickInactive(initalMessage, inactiveMembers)
    }
 }
 
-async function getLastUserMessage(guildMembers, channelMessages, userID)
-{
+async function getLastUserMessage(guildMembers, channelMessages, userID){
   let result;
   const member = await guildMembers.cache.get(userID);
   const nickname = member.nickname;
@@ -727,8 +802,104 @@ async function getAllChannelMessages(channelList){
     }
     last_id = undefined;
   }
-  
+
   return messageList;
+}
+
+async function generateRankCard(channel, userStats, channelMessage){
+  const canvas = Canvas.createCanvas(700, 250);
+  const ctx = canvas.getContext('2d');
+
+  const background = await Canvas.loadImage('./background.png');
+
+  ctx.drawImage(background, 0, 0);
+
+  ctx.font = '60px sans-serif';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText(userStats.nickname, 300, 150);
+
+  ctx.font = '40px sans-serif';
+  ctx.fillStyle = '#F4D03F';
+  let rankTextStart = 690 - ctx.measureText(userStats.rank).width;
+  ctx.fillText(userStats.rank, rankTextStart, 50);
+
+  let rankLabelStart = rankTextStart - 65;
+  ctx.font = '25px sans-serif';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText("Rank: ", rankLabelStart, 50);
+
+  ctx.font = '25px sans-serif';
+  ctx.fillText("lv: ", 15, 50);
+
+  ctx.font = '40px sans-serif';
+  ctx.fillStyle= '#F4D03F';
+  let levelTextStart = 45;
+  ctx.fillText('#' + userStats.level, levelTextStart, 50);
+
+  //save context before clipping
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(190, 125, 50, 0, Math.PI * 2, true);
+  ctx.closePath();
+  ctx.clip();
+
+  const avatar = await Canvas.loadImage(userStats.avatar);
+
+  ctx.drawImage(avatar, 140, 75, 100, 100);
+  ctx.restore();
+
+  ctx.font = '25px sans-serif';
+  let xpText = userStats.current_xp + "/" + userStats.xpOfNextLevel;
+  let xpTextStart = 690 - ctx.measureText(xpText).width;
+  ctx.font = '25px sans-serif';
+  ctx.fillText(xpText, xpTextStart, 190);
+
+  let xCo = 15;
+  let yCo = 200;
+  let radius = 15;
+  let width = 680;
+  let height = 30;
+
+  ctx.strokeStyle = "rgb(120, 120, 120)";
+  ctx.fillStyle = "rgba(120, 120, 120, 1)";
+  ctx.beginPath();
+  ctx.moveTo(xCo + radius, yCo);
+  ctx.lineTo(xCo + width - radius, yCo);
+  ctx.quadraticCurveTo(xCo + width, yCo, xCo + width, yCo + radius);
+  ctx.lineTo(xCo + width, yCo + height - radius);
+  ctx.quadraticCurveTo(xCo + width, yCo + height, xCo + width - radius, yCo + height);
+  ctx.lineTo(xCo + radius, yCo + height);
+  ctx.quadraticCurveTo(xCo, yCo + height, xCo, yCo + height - radius);
+  ctx.lineTo(xCo, yCo + radius);
+  ctx.quadraticCurveTo(xCo, yCo, xCo + radius, yCo);
+  ctx.closePath();
+  ctx.stroke();
+  ctx.fill();
+
+  width = Math.round((userStats.current_xp/userStats.xpOfNextLevel) * 450);
+  ctx.strokeStyle = "rgb(255,165,0)";
+  ctx.fillStyle = "rgba(255, 165, 0, 1)";
+
+  ctx.beginPath();
+  ctx.moveTo(xCo + radius, yCo);
+  ctx.lineTo(xCo + width - radius, yCo);
+  ctx.quadraticCurveTo(xCo + width, yCo, xCo + width, yCo + radius);
+  ctx.lineTo(xCo + width, yCo + height - radius);
+  ctx.quadraticCurveTo(xCo + width, yCo + height, xCo + width - radius, yCo + height);
+  ctx.lineTo(xCo + radius, yCo + height);
+  ctx.quadraticCurveTo(xCo, yCo + height, xCo, yCo + height - radius);
+  ctx.lineTo(xCo, yCo + radius);
+  ctx.quadraticCurveTo(xCo, yCo, xCo + radius, yCo);
+  ctx.closePath();
+  ctx.stroke();
+  ctx.fill();
+
+  if(!channelMessage){
+    channelMessage='';
+  }
+
+  const attachment = new MessageAttachment(canvas.toBuffer());
+  await channel.send(channelMessage, attachment);
 }
 
 client.login(process.env.BOT_TOKEN);
