@@ -441,6 +441,8 @@ async function generateExperience(msg){
       userStats.nickname = await msg.guild.members.cache.find(u => u.id === msg.author.id).displayName,
 
       await saveUserStats(userStats);
+      const currentRank = msg.guild.roles.cache.find(r => r.name === userStats.rank);
+      await msg.guild.members.cache.find(m => m.id === msg.author.id).roles.add(currentRank);
       let channelMessage = "Congratulations, <@" + userStats.user_id + "> you have reached level: " + userStats.level
 
       if(userStats.newRankAchieved) {
