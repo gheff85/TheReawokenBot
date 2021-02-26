@@ -441,7 +441,7 @@ async function generateExperience(msg){
       userStats.nickname = await msg.guild.members.cache.find(u => u.id === msg.author.id).displayName,
 
       await saveUserStats(userStats);
-      let channelMessage = "Congratulations, <@" + userStats.user_id + "> you have reached level: #" + userStats.level
+      let channelMessage = "Congratulations, <@" + userStats.user_id + "> you have reached level: " + userStats.level
 
       if(userStats.newRankAchieved) {
         channelMessage = channelMessage + " and reached rank: " + userStats.rank;
@@ -840,7 +840,7 @@ async function generateRankCard(channel, userStats, channelMessage){
   ctx.font = '40px sans-serif';
   ctx.fillStyle= '#F4D03F';
   let levelTextStart = 45;
-  ctx.fillText('#' + userStats.level, levelTextStart, 50);
+  ctx.fillText(userStats.level, levelTextStart, 50);
 
   //save context before clipping
   ctx.save();
