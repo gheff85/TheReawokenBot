@@ -391,8 +391,8 @@ async function generateExperience(msg){
   userStats.last_msg = Date.now();
   userStats.current_xp += 25;
 
-  let avatar = msg.author.avatarURL({dynamic: false, format:"png"})
-  if(avatar){
+  let avatar = msg.author.displayAvatarURL({dynamic: false, format:"png"})
+  if(Boolean(avatar)){
     userStats.avatar = avatar;
   }
   else {
@@ -454,7 +454,6 @@ async function generateExperience(msg){
       const levelChannel = await msg.guild.channels.cache.get(process.env.MEMBER_LEVEL_RANK_UP_CHANNEL);
       generateRankCard(levelChannel, userStats, channelMessage);
   } else{
-    userStats.avatar = msg.author.avatarURL({dynamic: false, format:"png"})
     userStats.nickname = await msg.guild.members.cache.find(u => u.id === msg.author.id).displayName;
     await saveUserStats(userStats);
   }
