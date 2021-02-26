@@ -440,9 +440,8 @@ async function generateExperience(msg){
         channelMessage = channelMessage + " and reached rank: " + userStats.rank;
       }
 
-      generateRankCard(msg.channel, userStats, channelMessage);
       const levelChannel = await msg.guild.channels.cache.get(process.env.MEMBER_LEVEL_RANK_UP_CHANNEL);
-      await levelChannel.send(userStats.nickname + " has reached lvl: " + userStats.level);
+      generateRankCard(levelChannel, userStats, channelMessage);
   } else{
     userStats.avatar = msg.author.avatarURL({dynamic: false, format:"png"})
     userStats.nickname = await msg.guild.members.cache.find(u => u.id === msg.author.id).displayName;
