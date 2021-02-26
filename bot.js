@@ -391,6 +391,14 @@ async function generateExperience(msg){
   userStats.last_msg = Date.now();
   userStats.current_xp += 25;
 
+  let avatar = msg.author.avatarURL({dynamic: false, format:"png"})
+  if(avatar){
+    userStats.avatar = avatar;
+  }
+  else {
+    userStats.avatar = './discord-logo.png';
+  }
+
   if (userStats.current_xp >= userStats.xpOfNextLevel) {
       userStats.level++;
       switch(userStats.level){
@@ -426,13 +434,7 @@ async function generateExperience(msg){
           userStats.newRankAchieved = false;
           break;
       }
-      let avatar = msg.author.avatarURL({dynamic: false, format:"png"})
-      if(avatar){
-        userStats.avatar = avatar;
-      }
-      else {
-        userStats.avatar = './discord-logo.png';
-      }
+
       userStats.current_xp = userStats.current_xp - userStats.xpOfNextLevel;
       if(userStats.current_xp < 10){
         userStats.current_xp = 10;
