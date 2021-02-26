@@ -392,7 +392,7 @@ async function generateExperience(msg){
   userStats.current_xp += 25;
 
   let avatar = msg.author.displayAvatarURL({dynamic: false, format:"png"})
-  if(Boolean(avatar)){
+  if(avatar){
     userStats.avatar = avatar;
   }
   else {
