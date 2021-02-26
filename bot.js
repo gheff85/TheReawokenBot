@@ -822,7 +822,7 @@ async function generateRankCard(channel, userStats, channelMessage){
 
   ctx.font = '60px sans-serif';
   ctx.fillStyle = '#ffffff';
-  ctx.fillText(userStats.nickname, 300, 150);
+  ctx.fillText(userStats.nickname, 300, 150, 395);
 
   ctx.font = '40px sans-serif';
   ctx.fillStyle = '#F4D03F';
