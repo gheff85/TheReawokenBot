@@ -25,7 +25,8 @@ client.on("message", async(msg) => {
     let userStats = await getUserStats(msg.author.id).catch(e => {
       console.log(e.message);
     });
-    generateRankCard(msg.channel, userStats);
+
+    await generateRankCard(msg.channel, userStats, null);
   }
 
   if(msg.channel.id === process.env.CHAT_CHANNEL || msg.channel.id === process.env.PVE_CHANNEL ||
@@ -40,12 +41,11 @@ client.on("message", async(msg) => {
 
  
   /////////////////////////////assign role on register////////
-  if(msg.channel.id === process.env.REGISTER_HERE_CHANNEL && msg.content.includes("Successfully synced")){
-    let user = msg.content.split(":")[0];
-   
+  if(msg.channel.id === process.env.REGISTER_HERE_CHANNEL && msg.content.includes("!register")){
+
     const registeredRole = msg.guild.roles.cache.find(r => r.name === "Registered");
-    const guildMember = await msg.guild.members.cache.find(m => m.displayName === user).roles.add(registeredRole);
-    };
+    await msg.guild.members.cache.find(m => m.id === msg.author.id).roles.add(registeredRole);
+    }
    
   
   ////////Stop bot from replying to bots from this point on//////////
@@ -381,7 +381,7 @@ async function generateExperience(msg){
     };
   }
 
-  if((Date.now() - userStats.last_msg) > 10*1000 ) {
+  if((Date.now() - userStats.last_msg) < 10*1000 ) {
     return;
   }
 
@@ -392,27 +392,34 @@ async function generateExperience(msg){
       userStats.level++;
       switch(userStats.level){
         case 5:
-          userStats.rank = "two";
+          userStats.rank = "Shank";
           userStats.newRankAchieved = true;
           break;
         case 10:
-          userStats.rank = "three";
+          userStats.rank = "Dreg";
           userStats.newRankAchieved = true;
           break;
         case 15:
-          userStats.rank = "four";
+          userStats.rank = "Vandal";
           userStats.newRankAchieved = true;
           break;
         case 20:
-          userStats.rank = "five";
+          userStats.rank = "Captain";
           userStats.newRankAchieved = true;
           break;
         case 25:
-          userStats.rank = "six";
+          userStats.rank = "Servitor";
+          userStats.newRankAchieved = true;
+          break;
+          case 30:
+          userStats.rank = "Archon";
+          userStats.newRankAchieved = true;
+          break;
+          case 35:
+          userStats.rank = "Kell";
           userStats.newRankAchieved = true;
           break;
         default:
-          userStats.rank = userStats.rank;
           userStats.newRankAchieved = false;
           break;
       }
@@ -428,10 +435,19 @@ async function generateExperience(msg){
       userStats.nickname = await msg.guild.members.cache.find(u => u.id === msg.author.id).displayName,
 
       await saveUserStats(userStats);
+      let channelMessage = "Congratulations, <@" + userStats.user_id + "> you have reached level: #" + userStats.level
 
-      //send additional message (add on additional text) if userStats.newRankAchieved === true
+      if(userStats.newRankAchieved) {
+        channelMessage = channelMessage + " and reached rank: " + userStats.rank;
+      }
+
+      generateRankCard(msg.channel, userStats, channelMessage);
       const levelChannel = await msg.guild.channels.cache.get(process.env.MEMBER_LEVEL_RANK_UP_CHANNEL);
       await levelChannel.send(userStats.nickname + " has reached lvl: " + userStats.level);
+  } else{
+    userStats.avatar = msg.author.avatarURL({dynamic: false, format:"png"})
+    userStats.nickname = await msg.guild.members.cache.find(u => u.id === msg.author.id).displayName;
+    await saveUserStats(userStats);
   }
 }
 
@@ -673,7 +689,7 @@ async function getInactiveIDsAndSendInactiveUsersReply(msg, userRecentMsgs){
 
   inactiveUsersMsg = filteredUsers.map(elm => {
     var lastActivity;
-    if(elm.Date.getTime() === new Date(2020, 01).getTime()){
+    if(elm.Date.getTime() === new Date(2020, 1).getTime()){
       lastActivity = "No Activity Recorded"
     }
     else{
@@ -791,71 +807,100 @@ async function getAllChannelMessages(channelList){
   return messageList;
 }
 
-async function generateRankCard(channel, userStats){
+async function generateRankCard(channel, userStats, channelMessage){
   const canvas = Canvas.createCanvas(700, 250);
   const ctx = canvas.getContext('2d');
 
   const background = await Canvas.loadImage('./background.png');
 
-  let x = 0
-  let y = 0
-  ctx.drawImage(background, x, y);
+  ctx.drawImage(background, 0, 0);
 
   ctx.font = '60px sans-serif';
   ctx.fillStyle = '#ffffff';
   ctx.fillText(userStats.nickname, 300, 150);
 
+  ctx.font = '40px sans-serif';
+  ctx.fillStyle = '#F4D03F';
+  let rankTextStart = 690 - ctx.measureText(userStats.rank).width;
+  ctx.fillText(userStats.rank, rankTextStart, 50);
+
+  let rankLabelStart = rankTextStart - 65;
   ctx.font = '25px sans-serif';
-  ctx.fillText("lv: ", 250, 50);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText("Rank: ", rankLabelStart, 50);
+
+  ctx.font = '25px sans-serif';
+  ctx.fillText("lv: ", 15, 50);
 
   ctx.font = '40px sans-serif';
   ctx.fillStyle= '#F4D03F';
-  ctx.fillText('#' + userStats.level, 285, 50);
+  let levelTextStart = 45;
+  ctx.fillText('#' + userStats.level, levelTextStart, 50);
 
-  ctx.font = '25px sans-serif';
-  ctx.fillStyle = '#ffffff';
-  ctx.fillText("Rank: ", 375, 50);
-  //ctx.fillText(userStats.rank, 400, 25);
-  ctx.font = '40px sans-serif';
-  ctx.fillStyle = '#F4D03F';
-  ctx.fillText("Archon Priest", 450, 50);
-
-
-// Pick up the pen
+  //save context before clipping
+  ctx.save();
   ctx.beginPath();
-  // Start the arc to form a circle
-  //ctx.arc(100, 150, 100, 0, Math.PI * 2, true);
-  ctx.arc(125, 125, 100, 0, Math.PI * 2, true);
-  // Put the pen down
+  ctx.arc(190, 125, 50, 0, Math.PI * 2, true);
   ctx.closePath();
-  // Clip off the region you drew on
   ctx.clip();
 
   const avatar = await Canvas.loadImage(userStats.avatar);
-  // Move the image downwards vertically and constrain its height to 200, so it's a square
-  //ctx.drawImage(avatar, 25, 100, 125, 125);
-  ctx.drawImage(avatar, 25, 25, 200, 200);
 
+  ctx.drawImage(avatar, 140, 75, 100, 100);
+  ctx.restore();
 
-// rectWidth = 630 * percent / 100 (in this case 100%)
-  const rectX = 300;
-  const rectY = 200;
-  const rectWidth = 400;
-  const rectHeight = 30;
-  const cornerRadius = 37;
+  ctx.font = '25px sans-serif';
+  let xpText = userStats.current_xp + "/" + userStats.xpOfNextLevel;
+  let xpTextStart = 690 - ctx.measureText(xpText).width;
+  ctx.font = '25px sans-serif';
+  ctx.fillText(xpText, xpTextStart, 190);
 
-  ctx.lineJoin = "round";
-  ctx.lineWidth = cornerRadius;
-  ctx.strokeStyle = '#FF1700';
-  ctx.fillStyle = '#FF1700';
+  let xCo = 15;
+  let yCo = 200;
+  let radius = 15;
+  let width = 680;
+  let height = 30;
 
-  ctx.strokeRect(rectX + (cornerRadius / 2), rectY + (cornerRadius / 2), rectWidth - cornerRadius, rectHeight - cornerRadius);
-  ctx.fillRect(rectX + (cornerRadius / 2), rectY + (cornerRadius / 2), rectWidth - cornerRadius, rectHeight - cornerRadius);
+  ctx.strokeStyle = "rgb(120, 120, 120)";
+  ctx.fillStyle = "rgba(120, 120, 120, 1)";
+  ctx.beginPath();
+  ctx.moveTo(xCo + radius, yCo);
+  ctx.lineTo(xCo + width - radius, yCo);
+  ctx.quadraticCurveTo(xCo + width, yCo, xCo + width, yCo + radius);
+  ctx.lineTo(xCo + width, yCo + height - radius);
+  ctx.quadraticCurveTo(xCo + width, yCo + height, xCo + width - radius, yCo + height);
+  ctx.lineTo(xCo + radius, yCo + height);
+  ctx.quadraticCurveTo(xCo, yCo + height, xCo, yCo + height - radius);
+  ctx.lineTo(xCo, yCo + radius);
+  ctx.quadraticCurveTo(xCo, yCo, xCo + radius, yCo);
+  ctx.closePath();
+  ctx.stroke();
+  ctx.fill();
 
+  width = Math.round((userStats.current_xp/userStats.xpOfNextLevel) * 450);
+  ctx.strokeStyle = "rgb(255,165,0)";
+  ctx.fillStyle = "rgba(255, 165, 0, 1)";
 
-  // Attach the image to a message and send it
+  ctx.beginPath();
+  ctx.moveTo(xCo + radius, yCo);
+  ctx.lineTo(xCo + width - radius, yCo);
+  ctx.quadraticCurveTo(xCo + width, yCo, xCo + width, yCo + radius);
+  ctx.lineTo(xCo + width, yCo + height - radius);
+  ctx.quadraticCurveTo(xCo + width, yCo + height, xCo + width - radius, yCo + height);
+  ctx.lineTo(xCo + radius, yCo + height);
+  ctx.quadraticCurveTo(xCo, yCo + height, xCo, yCo + height - radius);
+  ctx.lineTo(xCo, yCo + radius);
+  ctx.quadraticCurveTo(xCo, yCo, xCo + radius, yCo);
+  ctx.closePath();
+  ctx.stroke();
+  ctx.fill();
+
+  if(!channelMessage){
+    channelMessage='';
+  }
+
   const attachment = new MessageAttachment(canvas.toBuffer());
-  await channel.send('', attachment);
+  await channel.send(channelMessage, attachment);
 }
 
 client.login(process.env.BOT_TOKEN);
