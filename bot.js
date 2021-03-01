@@ -308,6 +308,7 @@ async function getUserStats(id){
     console.log(e.message);
     return "Cannot connect to db";
   });
+
   const result = await client.db('clan_info').collection('levels').findOne({ user_id: id });
   await client.close().catch(e=> {console.log(e.message)});
   return result;
@@ -329,6 +330,7 @@ async function saveUserStats(userStats){
                            level: userStats.level,
                            rank: userStats.rank,
                            newRankAchieved: userStats.newRankAchieved,
+                           previousRank: userStats.previousRank,
                            last_msg: userStats.last_msg}};
   const options = { upsert: true };
   const result = await client.db('clan_info').collection('levels').updateOne(query, update, options).catch(e=>{
@@ -380,6 +382,7 @@ async function generateExperience(msg){
       level:0,
       rank:"",
       newRankAchieved: false,
+      previousRank:"none",
       last_msg:0
     };
   }
@@ -409,26 +412,32 @@ async function generateExperience(msg){
         case 5:
           userStats.rank = "Dreg";
           userStats.newRankAchieved = true;
+          userStats.previousRank = "Shank";
           break;
         case 10:
           userStats.rank = "Vandal";
           userStats.newRankAchieved = true;
+          userStats.previousRank = "Dreg";
           break;
         case 15:
           userStats.rank = "Captain";
           userStats.newRankAchieved = true;
+          userStats.previousRank = "Vandal";
           break;
         case 20:
           userStats.rank = "Servitor";
           userStats.newRankAchieved = true;
+          userStats.previousRank = "Captain";
           break;
-          case 25:
+        case 25:
           userStats.rank = "Archon";
           userStats.newRankAchieved = true;
+          userStats.previousRank = "Servitor";
           break;
-          case 30:
+        case 30:
           userStats.rank = "Kell";
           userStats.newRankAchieved = true;
+          userStats.previousRank = "Archon";
           break;
         default:
           userStats.newRankAchieved = false;
@@ -444,6 +453,10 @@ async function generateExperience(msg){
 
       await saveUserStats(userStats);
       const currentRank = msg.guild.roles.cache.find(r => r.name === userStats.rank);
+      if(userStats.previousRank !== "none") {
+        const previousRank = msg.guild.roles.cache.find(r => r.name === userStats.previousRank);
+        await msg.guild.members.cache.find(m => m.id === msg.author.id).roles.remove(previousRank);
+      }
       await msg.guild.members.cache.find(m => m.id === msg.author.id).roles.add(currentRank);
       let channelMessage = "Congratulations, <@" + userStats.user_id + "> you have reached level: " + userStats.level
 
