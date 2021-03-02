@@ -20,9 +20,9 @@ var awaitingResponse = [];
 client.on("message", async(msg) => {
   var error;
 
-  if(msg.author.id === "749763074919235604"){
-  await msg.channel.send("<@749763074919235604> is a filthy casual and a dirty cheat");
-}
+  //if(msg.author.id === "749763074919235604"){
+ // await msg.channel.send("<@749763074919235604> is a filthy casual and a dirty cheat");
+//}
 
   if(msg.content.toLowerCase() === "!rb rankcard"){
     let userStats = await getUserStats(msg.author.id).catch(e => {
