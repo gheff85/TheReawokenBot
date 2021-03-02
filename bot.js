@@ -387,7 +387,7 @@ async function generateExperience(msg){
     };
   }
 
-  if((Date.now() - userStats.last_msg) < 60*1000 ) {
+  if((Date.now() - userStats.last_msg) < 120*1000 ) {
     return;
   }
 
