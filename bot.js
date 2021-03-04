@@ -915,7 +915,7 @@ let roundedPercentage = Math.floor((userStats.current_xp/userStats.xpOfNextLevel
   ctx.fillStyle = "rgba(255, 165, 0, 1)";
 
   for(var i=0; i< roundedPercentage; i++) {
-    if(xCo + (i * 6.8) + (2*radius)) <= 680){
+    if((xCo + (i * 6.8) + (2*radius)) <= 680){
       ctx.beginPath();
       ctx.arc((xCo + (i * 6.8)), (yCo), radius,0, (Math.PI *2), true)
       ctx.closePath();
