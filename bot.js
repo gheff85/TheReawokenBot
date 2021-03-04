@@ -391,7 +391,7 @@ async function generateExperience(msg){
     };
   }
 
-  if((Date.now() - userStats.last_msg) < 120*1000 ) {
+  if((Date.now() - userStats.last_msg) < 30*1000 ) {
     return;
   }
 
@@ -449,9 +449,7 @@ async function generateExperience(msg){
       }
 
       userStats.current_xp = userStats.current_xp - userStats.xpOfNextLevel;
-      //if(userStats.current_xp < 10){
-      //  userStats.current_xp = 10;
-      //}
+     
       userStats.xpOfNextLevel = Math.pow((userStats.level + 1), 2) + 20 * (userStats.level + 1) + 100;
       userStats.nickname = await msg.guild.members.cache.find(u => u.id === msg.author.id).displayName,
 
