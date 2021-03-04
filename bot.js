@@ -449,9 +449,9 @@ async function generateExperience(msg){
       }
 
       userStats.current_xp = userStats.current_xp - userStats.xpOfNextLevel;
-      if(userStats.current_xp < 10){
-        userStats.current_xp = 10;
-      }
+      //if(userStats.current_xp < 10){
+      //  userStats.current_xp = 10;
+      //}
       userStats.xpOfNextLevel = Math.pow((userStats.level + 1), 2) + 20 * (userStats.level + 1) + 100;
       userStats.nickname = await msg.guild.members.cache.find(u => u.id === msg.author.id).displayName,
 
@@ -901,24 +901,19 @@ async function generateRankCard(channel, userStats, channelMessage){
   ctx.closePath();
   ctx.stroke();
   ctx.fill();
-
-  width = Math.round((userStats.current_xp/userStats.xpOfNextLevel) * 450);
+  
+let roundedPercentage = Math.floor((userStats.current_xp/userStats.xpOfNextLevel) * 100);
   ctx.strokeStyle = "rgb(255,165,0)";
   ctx.fillStyle = "rgba(255, 165, 0, 1)";
 
-  ctx.beginPath();
-  ctx.moveTo(xCo + radius, yCo);
-  ctx.lineTo(xCo + width - radius, yCo);
-  ctx.quadraticCurveTo(xCo + width, yCo, xCo + width, yCo + radius);
-  ctx.lineTo(xCo + width, yCo + height - radius);
-  ctx.quadraticCurveTo(xCo + width, yCo + height, xCo + width - radius, yCo + height);
-  ctx.lineTo(xCo + radius, yCo + height);
-  ctx.quadraticCurveTo(xCo, yCo + height, xCo, yCo + height - radius);
-  ctx.lineTo(xCo, yCo + radius);
-  ctx.quadraticCurveTo(xCo, yCo, xCo + radius, yCo);
-  ctx.closePath();
-  ctx.stroke();
-  ctx.fill();
+  for(var i=0; i< roundedPercentage; i++) {
+    ctx.beginPath();
+    ctx.moveTo(xCo + radius, yCo + radius);
+    ctx.arc((xCo + radius + (i * 6.8)), (yCo + radius), radius,0, (Math.PI *2), true)
+    ctx.closePath();
+    ctx.stroke();
+    ctx.fill();
+  }
 
   if(!channelMessage){
     channelMessage='';
