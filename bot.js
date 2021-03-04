@@ -882,8 +882,8 @@ async function generateRankCard(channel, userStats, channelMessage){
 
   let radius = 15;
   let xCo = 15 + radius;
-  let yCo = 200;
-  let width = 680;
+  let yCo = 200 + radius;
+  let width = 665;
   let height = 30;
 
   ctx.strokeStyle = "rgb(120, 120, 120)";
@@ -904,7 +904,7 @@ async function generateRankCard(channel, userStats, channelMessage){
   
   for(var i=0; i< 99; i++) {
     ctx.beginPath();
-    ctx.arc((xCo + (i * 6.8)), (yCo), radius,0, (Math.PI *2), true)
+    ctx.arc((xCo + (i * 6.65)), (yCo), radius,0, (Math.PI *2), true)
     ctx.closePath();
     ctx.stroke();
     ctx.fill();
@@ -915,9 +915,9 @@ let roundedPercentage = Math.floor((userStats.current_xp/userStats.xpOfNextLevel
   ctx.fillStyle = "rgba(255, 165, 0, 1)";
 
   for(var i=0; i< roundedPercentage; i++) {
-    if((xCo + (i * 6.8) + (2*radius)) <= 680){
+    if((xCo + (i * 6.65) + (2*radius)) <= 680){
       ctx.beginPath();
-      ctx.arc((xCo +  (i * 6.8)), (yCo), radius,0, (Math.PI *2), true)
+      ctx.arc((xCo +  (i * 6.65)), (yCo), radius,0, (Math.PI *2), true)
       ctx.closePath();
       ctx.stroke();
       ctx.fill();
