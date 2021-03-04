@@ -881,7 +881,7 @@ async function generateRankCard(channel, userStats, channelMessage){
   ctx.fillText(xpText, xpTextStart, 190);
 
   let radius = 15;
-  let xCo = 15 + (2 * radius);
+  let xCo = 15 + radius;
   let yCo = 200;
   let width = 680;
   let height = 30;
