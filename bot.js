@@ -888,31 +888,40 @@ async function generateRankCard(channel, userStats, channelMessage){
 
   ctx.strokeStyle = "rgb(120, 120, 120)";
   ctx.fillStyle = "rgba(120, 120, 120, 1)";
-  ctx.beginPath();
-  ctx.moveTo(xCo + radius, yCo);
-  ctx.lineTo(xCo + width - radius, yCo);
-  ctx.quadraticCurveTo(xCo + width, yCo, xCo + width, yCo + radius);
-  ctx.lineTo(xCo + width, yCo + height - radius);
-  ctx.quadraticCurveTo(xCo + width, yCo + height, xCo + width - radius, yCo + height);
-  ctx.lineTo(xCo + radius, yCo + height);
-  ctx.quadraticCurveTo(xCo, yCo + height, xCo, yCo + height - radius);
-  ctx.lineTo(xCo, yCo + radius);
-  ctx.quadraticCurveTo(xCo, yCo, xCo + radius, yCo);
-  ctx.closePath();
-  ctx.stroke();
-  ctx.fill();
+  //ctx.beginPath();
+  //ctx.moveTo(xCo + radius, yCo);
+  //ctx.lineTo(xCo + width - radius, yCo);
+  //ctx.quadraticCurveTo(xCo + width, yCo, xCo + width, yCo + radius);
+  //ctx.lineTo(xCo + width, yCo + height - radius);
+  //ctx.quadraticCurveTo(xCo + width, yCo + height, xCo + width - radius, yCo + height);
+  //ctx.lineTo(xCo + radius, yCo + height);
+  //ctx.quadraticCurveTo(xCo, yCo + height, xCo, yCo + height - radius);
+  //ctx.lineTo(xCo, yCo + radius);
+  //ctx.quadraticCurveTo(xCo, yCo, xCo + radius, yCo);
+  //ctx.closePath();
+  //ctx.stroke();
+  //ctx.fill();
+  
+  for(var i=0; i< 99; i++) {
+    ctx.beginPath();
+    ctx.arc((xCo + (i * 6.8)), (yCo), radius,0, (Math.PI *2), true)
+    ctx.closePath();
+    ctx.stroke();
+    ctx.fill();
+  }
   
 let roundedPercentage = Math.floor((userStats.current_xp/userStats.xpOfNextLevel) * 100);
   ctx.strokeStyle = "rgb(255,165,0)";
   ctx.fillStyle = "rgba(255, 165, 0, 1)";
 
   for(var i=0; i< roundedPercentage; i++) {
-    ctx.beginPath();
-    ctx.moveTo(xCo + radius, yCo + radius);
-    ctx.arc((xCo + radius + (i * 6.8)), (yCo + radius), radius,0, (Math.PI *2), true)
-    ctx.closePath();
-    ctx.stroke();
-    ctx.fill();
+    if(xCo + (i * 6.8) + (2*radius)) <= 680){
+      ctx.beginPath();
+      ctx.arc((xCo + (i * 6.8)), (yCo), radius,0, (Math.PI *2), true)
+      ctx.closePath();
+      ctx.stroke();
+      ctx.fill();
+    }
   }
 
   if(!channelMessage){
