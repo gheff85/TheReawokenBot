@@ -913,7 +913,6 @@ async function generateRankCard(channel, userStats, channelMessage){
 let roundedPercentage = Math.floor((userStats.current_xp/userStats.xpOfNextLevel) * 100);
   ctx.strokeStyle = "rgb(255,165,0)";
   ctx.fillStyle = "rgba(255, 165, 0, 1)";
-  ctx.lineWidth = 14;
   for(var i=0; i< (roundedPercentage -1); i++) {
     //if((xCo + (i * 6.65)) <= width){
       ctx.beginPath();
