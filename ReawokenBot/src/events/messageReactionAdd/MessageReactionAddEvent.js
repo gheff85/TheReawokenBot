@@ -6,6 +6,8 @@ module.exports = class MessageReactionAddEvent extends BaseEvent {
     super('messageReactionAdd');
   }
   async run (messageReaction, member) {
+    console.log("reaction detected")
+    console.log(member);
     if (member.bot) return;
 
     await common.logLastUsersMessageTimestamp(member.id, new Date())
