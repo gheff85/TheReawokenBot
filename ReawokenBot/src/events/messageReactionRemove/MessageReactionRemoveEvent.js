@@ -5,7 +5,7 @@ module.exports = class MessageReactionRemoveEvent extends BaseEvent {
   constructor() {
     super('messageReactionRemove');
   }
-  async run (messageReaction, member) {
+  async run (client, messageReaction, member) {
     if (member.bot) return;
 
     await common.logLastUsersMessageTimestamp(member.id, new Date())
