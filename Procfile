@@ -1,2 +1,1 @@
-worker: node bot.js
-Scheduled: node schedule.js
+worker: node ReawokenBot/src/bot.js
