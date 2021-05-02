@@ -54,9 +54,9 @@ module.exports = class InactiveCommand extends BaseCommand {
                     return `${m.DisplayName} lastActive: ${m.Date.getTime() === new Date(2020, 1).getTime() ? "No Activity Found" : m.Date}`;
                 })
 
-                //     inactiveUsersNotOnHolidays.forEach(m=>{
-                //         (msg.guild.members.cache.find(u=>u.id === m.UserId)).kick("Inactive");
-                //     })
+                    inactiveUsersNotOnHolidays.forEach(m=>{
+                        (msg.guild.members.cache.find(u=>u.id === m.UserId)).kick("Inactive");
+                    })
 
                 if (inactiveUsersText.length > 30) {
                     let numberOfLoops = Math.ceil(inactiveUsersText.length / 30)
