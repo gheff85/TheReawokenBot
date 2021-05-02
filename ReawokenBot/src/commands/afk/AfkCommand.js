@@ -35,10 +35,17 @@ async function promtUserToEnterDate(msg, dateType){
     userDate = await msg.channel
     .awaitMessages(m => m.author.id == msg.author.id, {max:1, time:60000, errors: ['time']})
     .then(async (collected) => {
+        console.log(collected)
         await infoMsg.delete().catch(e=>{console.log(e.message)});
         return await verifyDate(collected.first()).catch(e => {throw(e)});
       })
-    .catch((e) => Promise.reject({message: e.message}));
+    .catch((e) =>{ 
+        if(e.message === undefined){
+            return Promise.reject({message: "You took too long to respond.  Command has been cancelled.  Re-issue `!rb afk` to try again"})
+        } else {
+            return Promise.reject({message: e.message})
+        }
+    });
 
     return userDate;
 }
