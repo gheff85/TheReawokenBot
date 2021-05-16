@@ -8,7 +8,7 @@ module.exports = class LeaderboardCommand extends BaseCommand {
     }
 
     async run(client, msg, args) {
-        if (msg.channel.id === process.env.STAT_CHECKER_CHANNEL) {
+        // if (msg.channel.id === process.env.STAT_CHECKER_CHANNEL) {
             let userId = msg.author.id
 
             let userLevelData = await common.getAllUserLevelData()
@@ -35,8 +35,9 @@ module.exports = class LeaderboardCommand extends BaseCommand {
                     return { position: position, userId: d.user_id, nickname: d.nickname.split(' ')[0], rank: d.rank, level: d.level, avatar: d.avatar }
             });
 
-            sortedLevelData = sortedLevelData.splice(0, 10)
             let currentUser = sortedLevelData.filter(u=> u.userId === userId)[0];
+            sortedLevelData = sortedLevelData.splice(0, 10)
+            
 
             const embed = new MessageEmbed().setColor(0x4286f4).setTitle(`**Reawoken Rank Leaderboard**`)
                 .addField(`\u200b`, `\u200b`, false)
@@ -65,6 +66,6 @@ module.exports = class LeaderboardCommand extends BaseCommand {
                 }
 
             msg.channel.send(embed)
-        }
+        // }
     }
 }
