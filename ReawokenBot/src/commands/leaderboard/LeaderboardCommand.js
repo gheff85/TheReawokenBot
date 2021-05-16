@@ -8,7 +8,7 @@ module.exports = class LeaderboardCommand extends BaseCommand {
     }
 
     async run(client, msg, args) {
-        // if (msg.channel.id === process.env.STAT_CHECKER_CHANNEL) {
+        if (msg.channel.id === process.env.STAT_CHECKER_CHANNEL) {
             let userId = msg.author.id
 
             let userLevelData = await common.getAllUserLevelData()
@@ -66,6 +66,6 @@ module.exports = class LeaderboardCommand extends BaseCommand {
                 }
 
             msg.channel.send(embed)
-        // }
+        }
     }
 }
