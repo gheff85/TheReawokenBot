@@ -120,6 +120,18 @@ async function getUserStats(id){
     return result;
 }
 
+async function getAllUserLevelData(){
+  const client = new MongoClient(process.env.MONGODB_URI, {useUnifiedTopology: true});
+  await client.connect().catch(e=>{
+    console.log(e.message);
+    return "Cannot connect to db";
+  });
+
+  const result = await client.db('clan_info').collection('levels').find({}).toArray();
+  await client.close().catch(e=> {console.log(e.message)});
+  return result;
+}
+
 async function saveUserStats(userStats){
     const client = new MongoClient(process.env.MONGODB_URI, {useUnifiedTopology: true});
     await client.connect().catch(e=>{
@@ -265,4 +277,4 @@ async function getAllUsersLastMessageTimestamp(){
     return result;
 }
 
- module.exports = {generateExperience, getUserStats, generateRankCard, logLastUsersMessageTimestamp, getAllUsersLastMessageTimestamp};
+ module.exports = {generateExperience, getUserStats, getAllUserLevelData, generateRankCard, logLastUsersMessageTimestamp, getAllUsersLastMessageTimestamp};
