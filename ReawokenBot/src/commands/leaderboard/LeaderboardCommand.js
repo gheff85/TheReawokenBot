@@ -14,6 +14,7 @@ module.exports = class LeaderboardCommand extends BaseCommand {
             let userLevelData = await common.getAllUserLevelData()
                 .catch((e) => Promise.reject({ message: e.message }));
 
+
             let position = 0;
 
             let sortedLevelData = userLevelData.sort((a, b) => {
@@ -24,7 +25,10 @@ module.exports = class LeaderboardCommand extends BaseCommand {
                 return compareLevels(a, b) || compareXp(a, b);
             })
             .filter(u => u.level > 0)
-            .map((d, index, arr) => {
+
+            if(sortedLevelData.length > 0){
+
+           sortedLevelData = sortedLevelData.map((d, index, arr) => {
                     if (position === 0) {
                         position++;
                     }
@@ -66,6 +70,10 @@ module.exports = class LeaderboardCommand extends BaseCommand {
                 }
 
             msg.channel.send(embed)
+            }
+            else {
+                msg.channel.send('Not enough data available to generate the leaderboard')
+            }
         }
     }
 }
