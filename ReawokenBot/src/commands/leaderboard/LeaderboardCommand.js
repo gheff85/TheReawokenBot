@@ -40,6 +40,7 @@ module.exports = class LeaderboardCommand extends BaseCommand {
             });
 
             let currentUser = sortedLevelData.filter(u=> u.userId === userId)[0];
+            
             sortedLevelData = sortedLevelData.splice(0, 10)
             
 
@@ -47,7 +48,7 @@ module.exports = class LeaderboardCommand extends BaseCommand {
                 .addField(`\u200b`, `\u200b`, false)
                 .addFields((
                     sortedLevelData.map((user, i) => {
-                        if(user.userId === currentUser.userId){
+                        if(currentUser && user.userId === currentUser.userId){
                         return {
                             name: `**${user.position}) ${user.nickname} lv: ${user.level} (${user.rank})**`,
                             value: `\u200b`,
@@ -64,7 +65,7 @@ module.exports = class LeaderboardCommand extends BaseCommand {
                     }))
                 );
 
-                if(sortedLevelData.filter(u=> u.userId === userId).length === 0){
+                if(currentUser && sortedLevelData.filter(u=> u.userId === userId).length === 0){
                     embed.addField(`...`, `\u200b`, false)
                     embed.addField(`**${currentUser.position})** ${currentUser.nickname} **lv**: ${currentUser.level} (${currentUser.rank})`, `\u200b`, false)
                 }
