@@ -44,38 +44,63 @@ async function generateExperience(msg){
         userStats.level++;
         switch(userStats.level){
           case 1:
-            userStats.rank = "Shank";
+            userStats.rank = "Fanatic";
             userStats.newRankAchieved = true;
             break;
           case 5:
-            userStats.rank = "Dreg";
+            userStats.rank = "Goblin";
             userStats.newRankAchieved = true;
-            userStats.previousRank = "Shank";
+            userStats.previousRank = "Fanatic";
             break;
           case 10:
-            userStats.rank = "Vandal";
+            userStats.rank = "Hobgoblin";
             userStats.newRankAchieved = true;
-            userStats.previousRank = "Dreg";
+            userStats.previousRank = "Goblin";
             break;
           case 15:
-            userStats.rank = "Captain";
+            userStats.rank = "Supplicant";
             userStats.newRankAchieved = true;
-            userStats.previousRank = "Vandal";
+            userStats.previousRank = "Hobgoblin";
             break;
           case 20:
-            userStats.rank = "Servitor";
+            userStats.rank = "Harpy";
             userStats.newRankAchieved = true;
-            userStats.previousRank = "Captain";
+            userStats.previousRank = "Supplicant";
             break;
           case 25:
-            userStats.rank = "Archon";
+            userStats.rank = "Minotaur";
             userStats.newRankAchieved = true;
-            userStats.previousRank = "Servitor";
+            userStats.previousRank = "Harpy";
             break;
           case 30:
-            userStats.rank = "Kell";
+            userStats.rank = "Praetorian";
             userStats.newRankAchieved = true;
-            userStats.previousRank = "Archon";
+            userStats.previousRank = "Minotaur";
+            break;
+            case 35:
+            userStats.rank = "Hydra";
+            userStats.newRankAchieved = true;
+            userStats.previousRank = "Praetorian";
+            break;
+            case 40:
+            userStats.rank = "Wyvern";
+            userStats.newRankAchieved = true;
+            userStats.previousRank = "Hydra";
+            break;
+            case 45:
+            userStats.rank = "Gorgon";
+            userStats.newRankAchieved = true;
+            userStats.previousRank = "Wyvern";
+            break;
+            case 50:
+            userStats.rank = "Templar";
+            userStats.newRankAchieved = true;
+            userStats.previousRank = "Gorgon";
+            break;
+            case 50:
+            userStats.rank = "Axis Mind";
+            userStats.newRankAchieved = true;
+            userStats.previousRank = "Templar";
             break;
           default:
             userStats.newRankAchieved = false;
