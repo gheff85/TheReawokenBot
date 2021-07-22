@@ -42,76 +42,39 @@ async function generateExperience(msg){
  
     if (userStats.current_xp >= userStats.xpOfNextLevel) {
         userStats.level++;
-        switch(userStats.level){
-          case 1:
-            userStats.rank = "Fanatic";
-            userStats.newRankAchieved = true;
-            break;
-          case 5:
-            userStats.rank = "Goblin";
-            userStats.newRankAchieved = true;
-            userStats.previousRank = "Fanatic";
-            break;
-          case 10:
-            userStats.rank = "Hobgoblin";
-            userStats.newRankAchieved = true;
-            userStats.previousRank = "Goblin";
-            break;
-          case 15:
-            userStats.rank = "Supplicant";
-            userStats.newRankAchieved = true;
-            userStats.previousRank = "Hobgoblin";
-            break;
-          case 20:
-            userStats.rank = "Harpy";
-            userStats.newRankAchieved = true;
-            userStats.previousRank = "Supplicant";
-            break;
-          case 25:
-            userStats.rank = "Minotaur";
-            userStats.newRankAchieved = true;
-            userStats.previousRank = "Harpy";
-            break;
-          case 30:
-            userStats.rank = "Praetorian";
-            userStats.newRankAchieved = true;
-            userStats.previousRank = "Minotaur";
-            break;
-            case 35:
-            userStats.rank = "Hydra";
-            userStats.newRankAchieved = true;
-            userStats.previousRank = "Praetorian";
-            break;
-            case 40:
-            userStats.rank = "Wyvern";
-            userStats.newRankAchieved = true;
-            userStats.previousRank = "Hydra";
-            break;
-            case 45:
-            userStats.rank = "Gorgon";
-            userStats.newRankAchieved = true;
-            userStats.previousRank = "Wyvern";
-            break;
-            case 50:
-            userStats.rank = "Templar";
-            userStats.newRankAchieved = true;
-            userStats.previousRank = "Gorgon";
-            break;
-            case 50:
-            userStats.rank = "Axis Mind";
-            userStats.newRankAchieved = true;
-            userStats.previousRank = "Templar";
-            break;
-          default:
-            userStats.newRankAchieved = false;
-            break;
-        }
+        switch (userStats.level) {
+          case 1: userStats = updateRankOnUserStats(userStats, 'Fanatic', 'none');
+              break;
+          case 5: userStats = updateRankOnUserStats(userStats, 'Goblin', 'Fanatic');
+              break;
+          case 10: userStats = updateRankOnUserStats(userStats, 'Hobgoblin', 'Goblin');
+              break;
+          case 15: userStats = updateRankOnUserStats(userStats, 'Supplicant', 'Hobgoblin');
+              break;
+          case 20: userStats = updateRankOnUserStats(userStats, 'Harpy', 'Supplicant');
+              break;
+          case 25: userStats = updateRankOnUserStats(userStats, 'Minotaur', 'Harpy');
+              break;
+          case 30: userStats = updateRankOnUserStats(userStats, 'Praetorian', 'Minotaur');
+              break;
+          case 35: userStats = updateRankOnUserStats(userStats, 'Hydra', 'Praetorian');
+              break;
+          case 40: userStats = updateRankOnUserStats(userStats, 'Wyvern', 'Hydra');
+              break;
+          case 45: userStats = updateRankOnUserStats(userStats, 'Gorgon', 'Wyvern');
+              break;
+          case 50: userStats = updateRankOnUserStats(userStats, 'Templar', 'Gorgon');
+              break;
+          case 55: userStats = updateRankOnUserStats(userStats, 'Axis Mind', 'Templar');
+              break;
+          default: userStats.newRankAchieved = false;
+              break;
+      }
   
         userStats.current_xp = userStats.current_xp - userStats.xpOfNextLevel;
        
         userStats.xpOfNextLevel = Math.pow((userStats.level + 1), 2) + 20 * (userStats.level + 1) + 100;
 
-        
   
         await saveUserStats(userStats);
         const currentRank = msg.guild.roles.cache.find(r => r.name === userStats.rank);
@@ -131,6 +94,15 @@ async function generateExperience(msg){
     } else{
       await saveUserStats(userStats);
     }
+}
+
+function updateRankOnUserStats(userStats, rank, previousRank) {
+  return {
+      ... userStats,
+      rank,
+      newRankAchieved: true,
+      previousRank
+  }
 }
 
 async function getUserStats(id){

@@ -6,7 +6,7 @@ module.exports = class RegisterCommand extends BaseCommand {
         super('register', 'user', []);
     }
 
-    async run(client, msg, args) {
+    async run(client, msg) {
         if(msg.channel.id === process.env.REGISTER_HERE_CHANNEL){
 
             const Role = msg.guild.roles.cache
@@ -16,6 +16,5 @@ module.exports = class RegisterCommand extends BaseCommand {
             .find(m => m.id === msg.author.id).roles
             .add(Role);
             }
-           
     }
 }
