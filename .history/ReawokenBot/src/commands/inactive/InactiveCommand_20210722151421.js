@@ -1,8 +1,6 @@
 const BaseCommand = require('../../utils/structures/BaseCommand');
 const moment = require("moment");
-require('dotenv').config({
-    path: __dirname + '/.env'
-})
+require('dotenv').config({ path: __dirname + '/.env' })
 const common = require("../../utils/common/commonFunctions");
 
 module.exports = class InactiveCommand extends BaseCommand {
@@ -13,19 +11,22 @@ module.exports = class InactiveCommand extends BaseCommand {
     async run(client, msg, args) {
         if (msg.channel.id === process.env.REAWOKEN_COMMANDS_CHANNEL) {
 
-            const Role = msg.guild.roles.cache.find(r => r.name === "Registered")
+            const Role = msg.guild.roles.cache
+                .find(r => r.name === "Registered")
 
-            const registeredMembers = Role.members.filter(u => u.user.bot === false).map(m => {
-                return {
-                    user_id: m.user.id, user_tag: m.user.tag.split(" ")[0],
-                    DisplayName: m.displayName,
-                    JoinedDate: m.joinedAt
-                }
-            });
+            const registeredMembers = Role.members
+                .filter(u => u.user.bot === false)
+                .map(m => {
+                    return {
+                        user_id: m.user.id,
+                        user_tag: m.user.tag.split(" ")[0],
+                        DisplayName: m.displayName,
+                        JoinedDate: m.joinedAt
+                    }
+                });
 
-            const membersLastActivity = await common.getAllUsersLastMessageTimestamp().catch((e) => Promise.reject({
-                message: "getAllUsersLastMessageTimestamp: " + e.message
-            }));
+            const membersLastActivity = await common.getAllUsersLastMessageTimestamp()
+                .catch((e) => Promise.reject({message: "getAllUsersLastMessageTimestamp: " + e.message}));
 
             const inactiveUsers = registeredMembers.map(m => {
                 let userActivity = membersLastActivity.filter(a => a.user_id === m.user_id)[0]
@@ -35,34 +36,27 @@ module.exports = class InactiveCommand extends BaseCommand {
                     JoinedDate: m.JoinedDate,
                     Date: typeof userActivity === "undefined" ? new Date(2020, 1) : userActivity.date
                 }
-            }).filter(m => {
-                return filterBeforeDate(m.Date, 21)
-            }).filter(m => {
-                return filterBeforeDate(m.JoinedDate, 7)
-            });
+            })
+                .filter(m => { return filterBeforeDate(m.Date, 21)})
+                .filter(m => {return filterBeforeDate(m.JoinedDate, 7)});
 
             const holChannel = msg.client.channels.cache.get(process.env.MEMBERS_HOLIDAY_CHANNEL)
 
-            const holidayMsgs = await getAllChannelMessages([holChannel]).catch((e) => Promise.reject({
-                message: "getAllChannelMessages (Holiday): " + e.message
-            }));
+            const holidayMsgs = await getAllChannelMessages([holChannel])
+                .catch((e) => Promise.reject({ message: "getAllChannelMessages (Holiday): " + e.message }));
 
             const MembersOnHoliday = getUserIdsFromHolidayMessages(msg, holidayMsgs)
 
-            const inactiveUsersNotOnHolidays = inactiveUsers.filter(u => ! MembersOnHoliday.includes(u.UserId));
+            const inactiveUsersNotOnHolidays = inactiveUsers.filter(u => !MembersOnHoliday.includes(u.UserId));
 
             if (inactiveUsersNotOnHolidays.length > 0) {
                 const inactiveUsersText = inactiveUsersNotOnHolidays.map(m => {
-                    return `${
-                        m.DisplayName
-                    } lastActive: ${
-                        m.Date.getTime() === new Date(2020, 1).getTime() ? "No Activity Found" : m.Date
-                    }`;
+                    return `${m.DisplayName} lastActive: ${m.Date.getTime() === new Date(2020, 1).getTime() ? "No Activity Found" : m.Date}`;
                 })
 
-                if (args[0] === "kick") {
-                    inactiveUsersNotOnHolidays.forEach(m => {
-                        (msg.guild.members.cache.find(u => u.id === m.UserId)).kick("Inactive");
+                if(args[0] === "kick"){
+                    inactiveUsersNotOnHolidays.forEach(m=>{
+                        (msg.guild.members.cache.find(u=>u.id === m.UserId)).kick("Inactive");
                     })
                 }
 
@@ -70,22 +64,28 @@ module.exports = class InactiveCommand extends BaseCommand {
                     let numberOfLoops = Math.ceil(inactiveUsersText.length / 30)
                     let messageText = inactiveUsersText.slice(0, 30);
 
-                    await msg.reply("The following members have been marked as inactive to be removed from the clan:\n`" + messageText.join('\n') + "`").catch((e) => Promise.reject({message: e.message}));
+                    await msg.reply("The following members have been marked as inactive to be removed from the clan:\n`" + messageText.join('\n') + "`")
+                        .catch((e) => Promise.reject({ message: e.message }));
 
                     for (let i = 1; i < numberOfLoops; i++) {
                         if (i === (numberOfLoops - 1)) {
                             messageText = inactiveUsersText.slice(i * 30)
-                        } else {
+                        }
+                        else {
                             messageText = inactiveUsersText.slice(i * 30, (i + 1) * 30)
                         }
 
-                        await msg.reply("\n`" + messageText.join('\n') + "`").catch((e) => Promise.reject({message: e.message}));
+                        await msg.reply("\n`" + messageText.join('\n') + "`")
+                            .catch((e) => Promise.reject({ message: e.message }));
                     }
-                } else {
-                    await msg.reply("The following members have been marked as inactive to be removed from the clan:\n`" + inactiveUsersText.join('\n') + "`").catch((e) => Promise.reject({message: e.message}));
                 }
-            } else {
-                return Promise.reject({message: "No Inactive Members Found"});
+                else {
+                    await msg.reply("The following members have been marked as inactive to be removed from the clan:\n`" + inactiveUsersText.join('\n') + "`")
+                        .catch((e) => Promise.reject({ message: e.message }));
+                }
+            }
+            else {
+                return Promise.reject({ message: "No Inactive Members Found" });
             }
         }
     }
@@ -94,31 +94,37 @@ module.exports = class InactiveCommand extends BaseCommand {
 async function getAllChannelMessages(channelList) {
     const messageList = [];
     let last_id;
-    let performLoop = true;
 
     for (var channel of channelList) {
-        while (performLoop) {
-            const options = {
-                limit: 100
-            };
+        while (true) {
+            const options = { limit: 100 };
             if (last_id) {
                 options.before = last_id;
             }
 
-            const messages = await channel.messages.fetch(options).catch((e) => Promise.reject({message: e.message}));
+            const messages = await channel.messages.fetch(options)
+                .catch((e) => Promise.reject({ message: e.message }));
 
             if (messages.size > 0) {
-                messageList.push(... messages.array());
+                messageList.push(...messages.array());
                 last_id = messages.last().id;
             }
             if (messages.size != 100) {
-                performLoop = false;
+                break;
             }
         }
         last_id = undefined;
     }
 
     return messageList;
+}
+
+function getFirstMessageDate(msgs) {
+    return msgs.length > 0 ?
+        new Date(msgs.sort(function (a, b) {
+            return new Date(b.createdTimestamp) - new Date(a.createdTimestamp);
+        })[0].createdTimestamp) :
+        new Date(2020, 1)
 }
 
 function filterBeforeDate(prop, days) {
@@ -139,7 +145,8 @@ function getUserIdsFromHolidayMessages(msg, holidayMsgs) {
 
             if (startDate.isBefore(moment()) && endDate.isAfter(moment())) {
                 return msg.client.users.cache.find(u => u.tag === user).id;
-            } else {
+            }
+            else {
                 return "";
             }
         }

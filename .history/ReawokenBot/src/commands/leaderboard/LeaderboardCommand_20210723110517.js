@@ -48,14 +48,9 @@ module.exports = class LeaderboardCommand extends BaseCommand {
                     sortedLevelData = sortedLevelData.splice(0, 10)
 
 
-                    const embed = new MessageEmbed()
-                    .setColor(0x4286f4)
-                    .setTitle(`**Reawoken Rank Leaderboard**`)
-                    .addField(`\u200b`, `\u200b`, false)
-                    .addFields((sortedLevelData.map((user) => {
+                    const embed = new MessageEmbed().setColor(0x4286f4).setTitle(`**Reawoken Rank Leaderboard**`).addField(`\u200b`, `\u200b`, false).addFields((sortedLevelData.map((user, i) => {
                         if (currentUser && user.userId === currentUser.userId) {
-                            return {
-                                    name: `**${
+                            return {name: `**${
                                     user.position
                                 }) ${
                                     user.nickname
@@ -63,13 +58,9 @@ module.exports = class LeaderboardCommand extends BaseCommand {
                                     user.level
                                 } (${
                                     user.rank
-                                })**`,
-                                value: `\u200b`,
-                                inline: false
-                            };
+                                })**`, value: `\u200b`, inline: false};
                         } else {
-                            return {
-                                    name: `**${
+                            return {name: `**${
                                     user.position
                                 })** ${
                                     user.nickname
@@ -77,10 +68,7 @@ module.exports = class LeaderboardCommand extends BaseCommand {
                                     user.level
                                 } (${
                                     user.rank
-                                })`,
-                                value: `\u200b`,
-                                inline: false
-                            };
+                                })`, value: `\u200b`, inline: false};
                         }
                     })));
 

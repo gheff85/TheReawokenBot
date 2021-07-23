@@ -3,11 +3,10 @@ const Discord = require("discord.js");
 const { registerCommands, registerEvents } = require('./utils/registry');
 require('dotenv').config({path: __dirname + '/.env'})
 const client = new Client({ ws: { intents: new Discord.Intents(Discord.Intents.ALL) }});
-const commonFunctions = require('../../utils/common/commonFunctions')
+
 
 process.on('unhandledRejection', (reason, p) => {
-  console.log(commonFunctions.storeError(new Error('Unhandled Rejection at: Promise ' + p + '; reason: ' + reason)));
-  console.log('Unhandled Rejection at: Promise', p, '; reason:', reason);
+  console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
 });
 
 (async () => {
