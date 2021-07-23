@@ -48,11 +48,7 @@ module.exports = class LeaderboardCommand extends BaseCommand {
                     sortedLevelData = sortedLevelData.splice(0, 10)
 
 
-                    const embed = new MessageEmbed()
-                    .setColor(0x4286f4)
-                    .setTitle(`**Reawoken Rank Leaderboard**`)
-                    .addField(`\u200b`, `\u200b`, false)
-                    .addFields((sortedLevelData.map((user) => {
+                    const embed = new MessageEmbed().setColor(0x4286f4).setTitle(`**Reawoken Rank Leaderboard**`).addField(`\u200b`, `\u200b`, false).addFields((sortedLevelData.map((user) => {
                         if (currentUser && user.userId === currentUser.userId) {
                             return {
                                     name: `**${
@@ -105,7 +101,7 @@ module.exports = class LeaderboardCommand extends BaseCommand {
         } catch (e) {
             msg.channel.send('Error occurred generating leaderboard - contact <@Admin>')
             console.log(e.message)
-            console.log(common.storeError(e));
+            common.storeError(e).then(res => console.log(res)).catch(e => console.log(e));
         }
     }
 }

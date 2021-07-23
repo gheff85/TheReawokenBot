@@ -10,7 +10,7 @@ module.exports = class RankcardCommand extends BaseCommand {
         if (msg.channel.id === process.env.STAT_CHECKER_CHANNEL) {
             let userStats = await common.getUserStats(msg.author.id).catch(e => {
                 console.log(e.message);
-                console.log(common.storeError(e));
+                common.storeError(e).then(res => console.log(res)).catch(e => console.log(e));
             });
 
             if (userStats && (userStats.level > 0)) {
@@ -18,7 +18,7 @@ module.exports = class RankcardCommand extends BaseCommand {
             } else {
                 await msg.channel.send("<@" + msg.author.id + "> You have not had enough Discord participation to be able to generate a rankcard").catch((e) => {
                     console.log(e.message)
-                    console.log(common.storeError(e));
+                    common.storeError(e).then(res => console.log(res)).catch(e => console.log(e));
                 });
             }
         }

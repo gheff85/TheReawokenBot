@@ -19,7 +19,7 @@ module.exports = class RegisterCommand extends BaseCommand {
             }
         } catch (e) {
             console.log(e)
-            console.log(commonFunctions.storeError(e));
+            commonFunctions.storeError(e).then(res => console.log(res)).catch(e => console.log(e));
         }
     }
 }
