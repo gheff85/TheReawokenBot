@@ -1,6 +1,7 @@
 .idea
 .vscode
 .env
+.history
 # Logs
 logs
 *.log
