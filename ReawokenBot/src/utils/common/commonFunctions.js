@@ -137,7 +137,7 @@ async function getAllUserLevelData() {
     return result;
 }
 
-async function getHolidayMessageById(id) {
+async function getHolidayMessageAndUserById(id) {
   const client = new MongoClient(process.env.MONGODB_URI, {useUnifiedTopology: true});
     await client.connect().catch(e => {
         console.log(e.message);
@@ -148,7 +148,7 @@ async function getHolidayMessageById(id) {
     await client.close().catch(e => {
         console.log(e.message)
     });
-    return result.message_id;
+    return {messageId: result.message_id, user: result.member};
 }
 
 async function saveUserStats(userStats) {
@@ -405,7 +405,7 @@ module.exports = {
     logLastUsersMessageTimestamp,
     getAllUsersLastMessageTimestamp,
     storeError,
-    getHolidayMessageById,
+    getHolidayMessageAndUserById,
     storeUserHoliday,
     getLastHolidayId
 };

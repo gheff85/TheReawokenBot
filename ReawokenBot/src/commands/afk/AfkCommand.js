@@ -3,7 +3,7 @@ require('dotenv').config({
     path: __dirname + '/.env'
 })
 var moment = require("moment");
-const {getHolidayMessageById, storeUserHoliday, getLastHolidayId} = require('../../utils/common/commonFunctions');
+const {getHolidayMessageAndUserById, storeUserHoliday, getLastHolidayId} = require('../../utils/common/commonFunctions');
 
 module.exports = class AfkCommand extends BaseCommand {
     constructor() {
@@ -14,7 +14,7 @@ module.exports = class AfkCommand extends BaseCommand {
         if (msg.channel.id === process.env.MEMBERS_HOLIDAY_CHANNEL) {
             if (['create', 'edit'].includes(args[0].toLowerCase())) {
                 if (args[0].toLowerCase() === "edit") {
-                    let messageId;
+                    let holidayMessageAndUser;
                     let holidayId;
                     if (args[0] === 'edit') {
 
@@ -27,9 +27,9 @@ module.exports = class AfkCommand extends BaseCommand {
                             throw new Error("HolidayId not valid.");
                         }
 
-                        messageId = await getHolidayMessageById(parseInt(holidayId))
+                        holidayMessageAndUser = await getHolidayMessageAndUserById(parseInt(holidayId))
 
-                        if (!messageId) {
+                        if (!holidayMessageAndUser.messageId) {
                             throw new Error("Unable to find matching Holiday post. \nPlease add the correct HolidayId after the edit argument. \nCheck #members-holidays-help for valid arguments");
                         }
                     }
@@ -38,14 +38,14 @@ module.exports = class AfkCommand extends BaseCommand {
 
                     let endDate = await promptUserToEnterDate(msg, "End").catch((e) => Promise.reject({message: e.message}));
 
-                    const message = await msg.channel.messages.fetch(messageId)
-                    await message.edit("HolidayId: " + holidayId + "\nUser: " + msg.author.tag + " is AFK \nStart Date: " + startDate + "\nEnd Date: " + endDate);
+                    const message = await msg.channel.messages.fetch(holidayMessageAndUser.messageId)
+                    await message.edit("HolidayId: " + holidayId + "\nUser: " + holidayMessageAndUser.user + " is AFK \nStart Date: " + startDate + "\nEnd Date: " + endDate);
 
                     try {
                         let holiday = {
                             holiday_id: parseInt(holidayId),
-                            message_id: messageId,
-                            member: msg.author.tag,
+                            message_id: holidayMessageAndUser.messageId,
+                            member: holidayMessageAndUser.user,
                             startDate,
                             endDate
                         }
