@@ -3,7 +3,7 @@ require('dotenv').config({
     path: __dirname + '/.env'
 })
 var moment = require("moment");
-const {getHolidayMessageAndUserById, storeUserHoliday, getLastHolidayId} = require('../../utils/common/commonFunctions');
+const {getHolidayMessageAndUserById, storeUserHoliday, getLastHolidayId, removeHoliday} = require('../../utils/common/commonFunctions');
 
 module.exports = class AfkCommand extends BaseCommand {
     constructor() {
@@ -12,27 +12,50 @@ module.exports = class AfkCommand extends BaseCommand {
 
     async run(client, msg, args) {
         if (msg.channel.id === process.env.MEMBERS_HOLIDAY_CHANNEL) {
-            if (['create', 'edit'].includes(args[0].toLowerCase())) {
-                if (args[0].toLowerCase() === "edit") {
+            if (['create', 'edit', 'delete'].includes(args[0].toLowerCase())) {
+
+                if (args[0].toLowerCase() === 'delete') {
                     let holidayMessageAndUser;
                     let holidayId;
-                    if (args[0] === 'edit') {
-
-                        try {
-                            holidayId = args[1];
-                            if (! holidayId) {
-                                throw new Error();
-                            }
-                        } catch (e) {
-                            throw new Error("HolidayId not valid.");
+                    try {
+                        holidayId = args[1];
+                        if (! holidayId) {
+                            throw new Error();
                         }
-
-                        holidayMessageAndUser = await getHolidayMessageAndUserById(parseInt(holidayId))
-
-                        if (!holidayMessageAndUser.messageId) {
-                            throw new Error("Unable to find matching Holiday post. \nPlease add the correct HolidayId after the edit argument. \nCheck #members-holidays-help for valid arguments");
-                        }
+                    } catch (e) {
+                        throw new Error("HolidayId not valid.");
                     }
+
+                    holidayMessageAndUser = await getHolidayMessageAndUserById(parseInt(holidayId))
+
+                    if (! holidayMessageAndUser.messageId) {
+                        throw new Error("Unable to find matching Holiday post. \nPlease add the correct HolidayId after the edit argument. \nCheck #members-holidays-help for valid arguments");
+                    }
+
+                    const message = await msg.channel.messages.fetch(holidayMessageAndUser.messageId)
+                    await message.delete().catch((e) => Promise.reject({message: e.message}));
+                    await removeHoliday().catch(e => Promise.reject({message: e.message}));
+                }
+
+
+                if (args[0] === 'edit') {
+                    let holidayMessageAndUser;
+                    let holidayId;
+                    try {
+                        holidayId = args[1];
+                        if (! holidayId) {
+                            throw new Error();
+                        }
+                    } catch (e) {
+                        throw new Error("HolidayId not valid.");
+                    }
+
+                    holidayMessageAndUser = await getHolidayMessageAndUserById(parseInt(holidayId))
+
+                    if (! holidayMessageAndUser.messageId) {
+                        throw new Error("Unable to find matching Holiday post. \nPlease add the correct HolidayId after the edit argument. \nCheck #members-holidays-help for valid arguments");
+                    }
+
 
                     let startDate = await promptUserToEnterDate(msg, "Start").catch((e) => Promise.reject({message: e.message}));
 
@@ -58,7 +81,7 @@ module.exports = class AfkCommand extends BaseCommand {
                 } else {
                     let userTag = msg.author.tag;
                     if (args[0] === "create") {
-                        if(args[1].startsWith('<@')) {
+                        if (args[1].startsWith('<@')) {
                             userTag = args[1].replace('<@', '');
                             userTag = userTag.replace('!', '');
                             userTag = userTag.replace('>', '');
@@ -95,7 +118,7 @@ module.exports = class AfkCommand extends BaseCommand {
     }
 }
 
-async function promptUserToEnterDate(msg, dateType) {
+async function promptUserToEnterDate (msg, dateType) {
 
     let userDate;
     let infoMsg = await msg.reply(dateType + " Date (mm/dd/yyyy format)").then((result) => {
@@ -125,7 +148,7 @@ async function promptUserToEnterDate(msg, dateType) {
     return userDate;
 }
 
-async function verifyDate(message) {
+async function verifyDate (message) {
     var dateString = message.content;
     await message.delete().catch(e => {
         console.log(e.message)
@@ -137,7 +160,7 @@ async function verifyDate(message) {
     }
 }
 
-function isInputFormatValid(input) {
+function isInputFormatValid (input) {
 
     var pattern = /^\d{2}\/\d{2}\/\d{4}$/;
 

@@ -109,6 +109,23 @@ function updateRankOnUserStats(userStats, rank, previousRank) {
     }
 }
 
+async function removeHoliday(id) {
+    const client = new MongoClient(process.env.MONGODB_URI, {useUnifiedTopology: true});
+    await client.connect().catch(e => {
+        console.log(e.message);
+        return "Cannot connect to db";
+    });
+
+    await client.db('clan_info').collection('holidays').deleteOne({holiday_id: id}).catch(e => {
+        console.log(e.message);
+        return "Holiday db entry not deleted";
+    });
+
+    await client.close().catch(e => {
+        console.log(e.message)
+    });
+}
+
 async function getUserStats(id) {
     const client = new MongoClient(process.env.MONGODB_URI, {useUnifiedTopology: true});
     await client.connect().catch(e => {
@@ -138,7 +155,7 @@ async function getAllUserLevelData() {
 }
 
 async function getHolidayMessageAndUserById(id) {
-  const client = new MongoClient(process.env.MONGODB_URI, {useUnifiedTopology: true});
+    const client = new MongoClient(process.env.MONGODB_URI, {useUnifiedTopology: true});
     await client.connect().catch(e => {
         console.log(e.message);
         return "Cannot connect to db";
@@ -222,52 +239,52 @@ async function storeError(error) {
     return result;
 }
 
-async function getLastHolidayId(){
-  const client = new MongoClient(process.env.MONGODB_URI, {useUnifiedTopology: true});
+async function getLastHolidayId() {
+    const client = new MongoClient(process.env.MONGODB_URI, {useUnifiedTopology: true});
     await client.connect().catch(e => {
         console.log(e.message);
         return "Cannot connect to db";
     });
 
-    const result = await client.db('clan_info').collection('holidays').find({}).sort({holiday_id:-1}).toArray();
+    const result = await client.db('clan_info').collection('holidays').find({}).sort({holiday_id: -1}).toArray();
     await client.close().catch(e => {
         console.log(e.message)
     });
-    return !result[0] ? 1000 : result[0].holiday_id;
+    return ! result[0] ? 1000 : result[0].holiday_id;
 }
 
 async function storeUserHoliday(holiday) {
-  const client = new MongoClient(process.env.MONGODB_URI, {useUnifiedTopology: true});
-  await client.connect().catch(e => {
-      console.log(e.message);
-      return "Cannot connect to db";
-  });
+    const client = new MongoClient(process.env.MONGODB_URI, {useUnifiedTopology: true});
+    await client.connect().catch(e => {
+        console.log(e.message);
+        return "Cannot connect to db";
+    });
 
-  const query = {
-      holiday_id: holiday.holiday_id
-  };
+    const query = {
+        holiday_id: holiday.holiday_id
+    };
 
-  const update = {
-      $set: {
-          holiday_id: holiday.holiday_id,
-          message_id: holiday.message_id,
-          member: holiday.member,
-          startDate: holiday.startDate,
-          endDate: holiday.endDate
-      }
-  };
-  const options = {
-      upsert: true
-  };
-  const result = await client.db('clan_info').collection('holidays').updateOne(query, update, options).catch(e => {
-      console.log(e.message);
-      return "Unable to store member holiday";
-  });
+    const update = {
+        $set: {
+            holiday_id: holiday.holiday_id,
+            message_id: holiday.message_id,
+            member: holiday.member,
+            startDate: holiday.startDate,
+            endDate: holiday.endDate
+        }
+    };
+    const options = {
+        upsert: true
+    };
+    const result = await client.db('clan_info').collection('holidays').updateOne(query, update, options).catch(e => {
+        console.log(e.message);
+        return "Unable to store member holiday";
+    });
 
-  await client.close().catch(e => {
-      console.log(e.message)
-  });
-  return result;
+    await client.close().catch(e => {
+        console.log(e.message)
+    });
+    return result;
 }
 
 async function logLastUsersMessageTimestamp(userId, date) {
@@ -407,5 +424,6 @@ module.exports = {
     storeError,
     getHolidayMessageAndUserById,
     storeUserHoliday,
-    getLastHolidayId
+    getLastHolidayId,
+    removeHoliday
 };
