@@ -1,5 +1,5 @@
 const BaseCommand = require('../../utils/structures/BaseCommand');
-const commonFunctions = require('../../utils/common/commonFunctions')
+const {storeError}  = require('../../utils/common/commonFunctions')
 require('dotenv').config({
     path: __dirname + '/.env'
 })
@@ -19,7 +19,7 @@ module.exports = class RegisterCommand extends BaseCommand {
             }
         } catch (e) {
             console.log(e)
-            commonFunctions.storeError(e).then(res => console.log(res)).catch(e => console.log(e));
+            storeError(e).then(res => console.log(res)).catch(e => console.log(e));
         }
     }
 }

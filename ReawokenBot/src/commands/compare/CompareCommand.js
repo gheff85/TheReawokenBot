@@ -2,7 +2,7 @@ const BaseCommand = require('../../utils/structures/BaseCommand');
 require('dotenv').config({
     path: __dirname + '/.env'
 })
-// const common = require("../../utils/common/commonFunctions");
+
 const axios = require('axios').default;
 
 module.exports = class CompareCommand extends BaseCommand {

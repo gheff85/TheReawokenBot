@@ -1,6 +1,6 @@
 const BaseEvent = require('../../utils/structures/BaseEvent');
 const {MongoClient} = require('mongodb');
-const commonFunctions = require('../../utils/common/commonFunctions')
+const {storeError} = require('../../utils/common/commonFunctions')
 
 module.exports = class GuildMemberRemoveEvent extends BaseEvent {
     constructor() {
@@ -8,7 +8,7 @@ module.exports = class GuildMemberRemoveEvent extends BaseEvent {
     }
     async run(client, member) {
         member.roles.set([]).catch(e => {
-            commonFunctions.storeError(e).then(res => console.log(res)).catch(e => console.log(e));
+            storeError(e).then(res => console.log(res)).catch(e => console.log(e));
         })
         const dbClient = new MongoClient(process.env.MONGODB_URI, {useUnifiedTopology: true});
         await dbClient.connect().catch(e => {
