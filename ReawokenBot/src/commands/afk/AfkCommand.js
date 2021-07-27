@@ -71,7 +71,7 @@ async function performHolidayEdit(msg, args) {
 async function performHolidayCreate(client, msg, args) {
     let userTag = msg.author.tag;
     if (args[0] === "create") {
-        if (args[1].startsWith('<@')) {
+        if (args[1] && args[1].startsWith('<@')) {
             userTag = args[1].replace('<@', '');
             userTag = userTag.replace('!', '');
             userTag = userTag.replace('>', '');
