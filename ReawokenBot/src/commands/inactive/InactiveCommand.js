@@ -129,9 +129,10 @@ function filterBeforeDate(prop, days) {
 
 function getUserIdsFromHolidayMessages(msg, holidayMsgs) {
     return holidayMsgs.map(h => {
-        if (h.content.substring(0, 4) === 'User') {
+        if (h.content.substring(0, 9) === 'HolidayId') {
             var isIndex = h.content.indexOf(' is ');
-            var user = h.content.substring(6, isIndex);
+            var userIndex = h.content.indexOf('User:');
+            var user = h.content.substring(userIndex + 6, isIndex);
             var startIndex = h.content.indexOf('Start Date');
             var startDate = moment(h.content.substring(startIndex + 12, startIndex + 22), 'MM/DD/YYYY');
             startIndex = h.content.indexOf('End Date');
