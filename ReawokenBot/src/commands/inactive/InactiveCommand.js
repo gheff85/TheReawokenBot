@@ -66,17 +66,17 @@ module.exports = class InactiveCommand extends BaseCommand {
                     })
                 }
 
-                if (inactiveUsersText.length > 30) {
-                    let numberOfLoops = Math.ceil(inactiveUsersText.length / 30)
-                    let messageText = inactiveUsersText.slice(0, 30);
+                if (inactiveUsersText.length > 20) {
+                    let numberOfLoops = Math.ceil(inactiveUsersText.length / 20)
+                    let messageText = inactiveUsersText.slice(0, 20);
 
                     await msg.reply("The following members have been marked as inactive to be removed from the clan:\n`" + messageText.join('\n') + "`").catch((e) => Promise.reject({message: e.message}));
 
                     for (let i = 1; i < numberOfLoops; i++) {
                         if (i === (numberOfLoops - 1)) {
-                            messageText = inactiveUsersText.slice(i * 30)
+                            messageText = inactiveUsersText.slice(i * 20)
                         } else {
-                            messageText = inactiveUsersText.slice(i * 30, (i + 1) * 30)
+                            messageText = inactiveUsersText.slice(i * 20, (i + 1) * 20)
                         }
 
                         await msg.reply("\n`" + messageText.join('\n') + "`").catch((e) => Promise.reject({message: e.message}));
