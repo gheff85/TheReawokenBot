@@ -3,7 +3,7 @@ const moment = require("moment");
 require('dotenv').config({
     path: __dirname + '/.env'
 })
-const common = require("../../utils/common/commonFunctions");
+const {getAllUsersLastMessageTimestamp} = require("../../utils/common/commonFunctions");
 
 module.exports = class InactiveCommand extends BaseCommand {
     constructor() {
@@ -23,7 +23,7 @@ module.exports = class InactiveCommand extends BaseCommand {
                 }
             });
 
-            const membersLastActivity = await common.getAllUsersLastMessageTimestamp().catch((e) => Promise.reject({
+            const membersLastActivity = await getAllUsersLastMessageTimestamp().catch((e) => Promise.reject({
                 message: "getAllUsersLastMessageTimestamp: " + e.message
             }));
 

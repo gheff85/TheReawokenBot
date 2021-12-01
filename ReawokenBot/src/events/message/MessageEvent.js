@@ -1,5 +1,5 @@
 const BaseEvent = require('../../utils/structures/BaseEvent');
-const common = require("../../utils/common/commonFunctions");
+const {logLastUsersMessageTimestamp, generateExperience} = require("../../utils/common/commonFunctions");
 module.exports = class MessageEvent extends BaseEvent {
   constructor() {
     super('message');
@@ -21,10 +21,10 @@ module.exports = class MessageEvent extends BaseEvent {
       .trim();
     }
 
-    await common.logLastUsersMessageTimestamp(message.author.id, new Date())
+    await logLastUsersMessageTimestamp(message.author.id, new Date())
 
     if(messageContent !== "rankcard"){
-      await common.generateExperience(message)
+      await generateExperience(message)
     }
 
     if (message.content.startsWith(client.prefix) || messageContent === "register") {

@@ -1,5 +1,5 @@
 const BaseEvent = require('../../utils/structures/BaseEvent');
-const common = require("../../utils/common/commonFunctions");
+const {logLastUsersMessageTimestamp} = require("../../utils/common/commonFunctions");
 
 module.exports = class MessageReactionAddEvent extends BaseEvent {
   constructor() {
@@ -8,6 +8,6 @@ module.exports = class MessageReactionAddEvent extends BaseEvent {
   async run (client, messageReaction, member) {
     if (member.bot) return;
 
-    await common.logLastUsersMessageTimestamp(member.id, new Date())
+    await logLastUsersMessageTimestamp(member.id, new Date())
   }
 }

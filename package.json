@@ -4,7 +4,8 @@
   "description": "",
   "main": "bot.js",
   "scripts": {
-    "start": "node ReawokenBot/src/bot.js"
+    "start": "node ReawokenBot/src/bot.js",
+    "test": "jest"
   },
   "dependencies": {
     "axios": "^0.21.0",
@@ -21,6 +22,7 @@
     "npm": "6.14.5"
   },
   "devDependencies": {
-    "eslint": "^7.31.0"
+    "eslint": "^7.31.0",
+    "jest": "^27.0.6"
   }
 }

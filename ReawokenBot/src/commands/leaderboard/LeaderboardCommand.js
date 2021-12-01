@@ -1,5 +1,5 @@
 const BaseCommand = require('../../utils/structures/BaseCommand');
-const common = require("../../utils/common/commonFunctions");
+const {getAllUserLevelData, storeError} = require("../../utils/common/commonFunctions");
 const {MessageEmbed} = require("discord.js");
 
 module.exports = class LeaderboardCommand extends BaseCommand {
@@ -12,7 +12,7 @@ module.exports = class LeaderboardCommand extends BaseCommand {
             if (msg.channel.id === process.env.STAT_CHECKER_CHANNEL) {
                 let userId = msg.author.id
 
-                let userLevelData = await common.getAllUserLevelData().catch((e) => Promise.reject({message: e.message}));
+                let userLevelData = await getAllUserLevelData().catch((e) => Promise.reject({message: e.message}));
 
                 let position = 0;
 
@@ -101,7 +101,7 @@ module.exports = class LeaderboardCommand extends BaseCommand {
         } catch (e) {
             msg.channel.send('Error occurred generating leaderboard - contact <@Admin>')
             console.log(e.message)
-            common.storeError(e).then(res => console.log(res)).catch(e => console.log(e));
+            storeError(e).then(res => console.log(res)).catch(e => console.log(e));
         }
     }
 }
