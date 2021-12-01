@@ -7,6 +7,9 @@ module.exports = class ReadyEvent extends BaseEvent {
   }
   async run (client) {
     console.log(client.user.tag + ' has logged in.');
+    const channel = client.channels.cache.get(process.env.REGISTER_CHANNEL);
+    await channel.messages.fetch(process.env.PLATFORM_MESSAGE);
+    await channel.messages.fetch(process.env.LOCALE_MESSAGE);
     setInterval(() => {updateMemberCount(client)}, 15*60*1000);
   }
 }

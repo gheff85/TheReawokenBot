@@ -1,5 +1,6 @@
 const BaseCommand = require('../../utils/structures/BaseCommand');
-const {storeError}  = require('../../utils/common/commonFunctions')
+const {storeError}  = require('../../utils/common/commonFunctions');
+const {MessageEmbed} = require("discord.js");
 require('dotenv').config({
     path: __dirname + '/.env'
 })
@@ -10,16 +11,19 @@ module.exports = class RegisterCommand extends BaseCommand {
     }
 
     async run(client, msg) {
-        try {
-            if (msg.channel.id === process.env.REGISTER_HERE_CHANNEL) {
+        // try {
+        //     const platformEmbed = new MessageEmbed().setColor(0x4286f4).setTitle(`**Locale Assignment**`)
+        //     .setDescription("React/click the flag which repersents your closest locale.")
 
-                const Role = msg.guild.roles.cache.find(r => r.name === "Registered")
-
-                msg.guild.members.cache.find(m => m.id === msg.author.id).roles.add(Role);
-            }
-        } catch (e) {
-            console.log(e)
-            storeError(e).then(res => console.log(res)).catch(e => console.log(e));
-        }
+        //     msg.channel.send(platformEmbed).then(async embedMessage => {
+        //         await embedMessage.react(":uk:915631788431392779")
+        //         await embedMessage.react(":eu:915631788683034694")
+        //         await embedMessage.react(":us:915631788322345042")
+        //         await embedMessage.react(":au:915631788758544434")
+        //     })
+        // } catch (e) {
+        //     console.log(e)
+        //     storeError(e).then(res => console.log(res)).catch(e => console.log(e));
+        // }
     }
 }
