@@ -19,7 +19,11 @@ module.exports = class CompareCommand extends BaseCommand {
                 return {user_id: m.user.id, user_tag: m.user.tag, DisplayName: m.displayName, JoinedDate: m.joinedAt}
             });
 
-            const AllMemberIDs = msg.guild.members.cache.filter(u => u.user.bot === false).map(m => {
+        
+            const AllMembers = await msg.guild.members.fetch()
+            
+            
+            const AllMemberIDs = AllMembers.filter(u => u.user.bot === false).map(m => {
                 return {user_id: m.user.id, user_tag: m.user.tag, DisplayName: m.displayName, JoinedDate: m.joinedAt}
             });
 
@@ -27,15 +31,15 @@ module.exports = class CompareCommand extends BaseCommand {
                 message: "getClanMembers: " + e.message
             }));
 
-            const notInClan = AllMemberIDs.filter(m => ! clanMembers.some(c => (m.DisplayName.toLowerCase().includes(c.lastSeenDisplayName.toLowerCase())) || (m.DisplayName.toLowerCase().includes(c.displayName.toLowerCase()))));
+            const notInClan = AllMemberIDs.filter(m => ! clanMembers.some(c => (m.DisplayName.toLowerCase().split(' ')[0] == c.globalDisplayName.toLowerCase()) || (m.DisplayName.toLowerCase().split(' ')[0] == c.displayName.toLowerCase())));
 
-            const notInDiscord = clanMembers.filter(c => ! AllMemberIDs.some(m => (m.DisplayName.toLowerCase().includes(c.lastSeenDisplayName.toLowerCase())) || (m.DisplayName.toLowerCase().includes(c.displayName.toLowerCase()))));
+            const notInDiscord = clanMembers.filter(c => ! AllMemberIDs.some(m => (m.DisplayName.toLowerCase().split(' ')[0] == c.globalDisplayName.toLowerCase()) || (m.DisplayName.toLowerCase().split(' ')[0] == c.displayName.toLowerCase())));
 
             const notRegistered = AllMemberIDs.filter(m => ! registeredMemberIDs.some(r => r.DisplayName === m.DisplayName));
 
             await msg.reply("The following members are in Discord but not the clan:\n`" + notInClan.map(c => c.DisplayName).join('\n') + "`").catch((e) => Promise.reject({message: e.message}));
 
-            await msg.reply("The following members are in the Clan but not in Discord:\n`" + notInDiscord.map(d => ("{" + d.displayName + ", " + d.lastSeenDisplayName + '}')).join('\n') + "`").catch((e) => Promise.reject({message: e.message}));
+            await msg.reply("The following members are in the Clan but not in Discord:\n`" + notInDiscord.map(d => ("{" + d.displayName + ", " + d.globalDisplayName + '}')).join('\n') + "`").catch((e) => Promise.reject({message: e.message}));
 
             await msg.reply("The following members are not registered in Discord:\n`" + notRegistered.map(r => r.DisplayName).join('\n') + "`").catch((e) => Promise.reject({message: e.message}));
         }
@@ -51,7 +55,10 @@ async function getClanMembers() {
 
     return await axios.get(process.env.GET_MEMBERS_ENDPOINT, config).then(r => {
         return r.data.Response.results.map(m => {
-            return {lastSeenDisplayName: m.destinyUserInfo.LastSeenDisplayName, displayName: m.destinyUserInfo.displayName}
+            let globalName = !m.bungieNetUserInfo ? m.destinyUserInfo.bungieGlobalDisplayName : m.bungieNetUserInfo.bungieGlobalDisplayName
+            let displayName = !m.bungieNetUserInfo ? m.destinyUserInfo.displayName : m.bungieNetUserInfo.displayName
+
+            return {globalDisplayName: globalName ? globalName : '', displayName: displayName ? displayName : ''}
         });
     }).catch((e) => Promise.reject({message: e.message}));
 }
